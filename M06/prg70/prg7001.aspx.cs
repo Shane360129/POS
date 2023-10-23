@@ -273,14 +273,14 @@ public partial class prg7001 : System.Web.UI.Page
                                         $"<td class='pFitPercent' data-val='{toDouble.Numer(pFitPercent, pointQty)}'>{threeDot.To3Dot(pFitPercent.ToString(pointRule))}</td>" +
                                     "</tr>";
                                     #region 更新庫存檔
-                                    //SqlComm = (thisStkRows == null || thisStkRows.Length == 0 )
-                                    //    ? $"INSERT INTO WP_pdStkQtyYM (pNo, qty, cost, YearMonth) VALUES ('{row["pNo"]}', '{stkQty}', '{(stkLeftAmt == 0 ? 0 : toDouble.Numer((stkLeftAmt / stkQty), 2))}', '{rptrYM}')"
-                                    //    : $"UPDATE WP_pdStkQtyYM SET qty='{stkQty}', cost='{(stkLeftAmt == 0 ? 0 : toDouble.Numer((stkLeftAmt / stkQty), 2))}', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
-                                    //getTbl.updTbl("WP", SqlComm);
+                                    SqlComm = (thisStkRows == null || thisStkRows.Length == 0)
+                                        ? $"INSERT INTO WP_pdStkQtyYM (pNo, qty, cost, YearMonth) VALUES ('{row["pNo"]}', '{stkQty}', '{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', '{rptrYM}')"
+                                        : $"UPDATE WP_pdStkQtyYM SET qty='{stkQty}', cost='{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
+                                    getTbl.updTbl ("WP", SqlComm);
                                     #endregion
 
                                     // EXCEL檔案下載
-                                    Input(recNo.ToString(), row["pBarcode"].ToString() + "-" + row["pNameS"].ToString(), preQty.ToString(),
+                                    Input (recNo.ToString(), row["pBarcode"].ToString() + "-" + row["pNameS"].ToString(), preQty.ToString(),
                                         iQty.ToString(), iAmt.ToString(), oQty.ToString(), oAmt.ToString(), stkQty.ToString(),
                                         pdStkLAmt.ToString(pointRule), toDouble.Numer(Cost, pointQty).ToString(pointRule),
                                         toDouble.Numer(oCost, pointQty).ToString(pointRule), toDouble.Numer(oProfit, pointQty).ToString(pointRule), pFitPercent.ToString(pointRule));
@@ -292,9 +292,9 @@ public partial class prg7001 : System.Web.UI.Page
                                     #region 更新庫存檔
                                     if (!(thisStkRows == null || thisStkRows.Length == 0))
                                     {
-                                        //SqlComm = $"UPDATE WP_pdStkQtyYM SET qty='0', cost='0', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
-                                        //getTbl.updTbl("WP", SqlComm);
-                                    }
+                                        SqlComm = $"UPDATE WP_pdStkQtyYM SET qty='0', cost='0', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
+                                        getTbl.updTbl ("WP", SqlComm);
+                                        }
                                     #endregion
 
                                 }
