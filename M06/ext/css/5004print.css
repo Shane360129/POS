@@ -1,0 +1,6 @@
+﻿.rptr-title {width:100%;text-align:center;font-size:16px;font-weight:bold;}
+.list-main {border-top:2px #000 solid;}
+.list-main i {display:none;}
+.list-main td, .list-main a, .list-main span {font-size:10px;font-family:新細明體;}
+.list-main td {border-top:1px #000 solid;padding:3px 5px;}
+.list-main tr:last-child td {border-top:2px #000 solid;border-bottom:0;}

@@ -1,0 +1,8 @@
+﻿@import url(7004.css);
+.rptr-title {font-size:18px;}
+.rptr-data div, .rptr-data span, .list-main td, .list-main a, .rprt-memo {font-size:13px;font-family:新細明體;}
+
+.list-main td {padding:1px 5px;border:0;border-bottom:1px #000 solid;}
+.list-title td {border-top:2px #000 solid;}
+.rptr-total td {border-bottom:2px #000 solid;}
+.oStk-link {display:none;}

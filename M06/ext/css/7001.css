@@ -1,0 +1,12 @@
+﻿.rptr-title {width:100%;text-align:center;font-size:18px;font-weight:bold;}
+
+.list-main .list-title td {border-top:1px #c9c9c9 solid;}
+.list-main tr:last-child td {border-bottom:1px #000 solid;}
+.list-main {border:1px #aaa solid;}
+    .list-main td {border-top: 1px #c9c9c9 solid;border-right: 1px #ccc solid;text-align:right;}
+    .list-main tr:not(.l-title2, .total-row) td:nth-child(3), .list-main tr.l-title2 td:nth-child(1), .list-main tr.total-row td:nth-child(2) {border-right:1px #000 solid;}
+    .list-main td.empty-data {text-align:center;}
+
+.tr-row > td, .total-row > td {border-right:1px #ccc solid;}
+.total-row > td {border-top:2px #666 solid;border-bottom:2px #666 solid;}
+

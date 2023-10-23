@@ -1,0 +1,58 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterPage.master.cs" Inherits="MasterPage" %>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta http-equiv="content-language" content="zh-tw" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" href="/images/logo/logo.ico" type="image/x-icon" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link href="/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="/Content/all.min.css" rel="stylesheet" />
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link href="/ext/css/main.css" rel="stylesheet" />
+
+    <title>水里鄉農會POS系統</title>
+    <meta name="description" content="水里鄉農會POS系統" />
+    <meta name="keywords" content="水里鄉農會POS系統" />
+
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+
+</head>
+<body>
+    <nav class="navbar no-background bootsnav fixed-top">
+        <div class="nav-title"><img src="/images/logo/fastLogo.jpg" style="position:absolute;left:0;" />水里鄉農會POS進銷存管理系統</div>
+    </nav>
+
+
+    <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+    </asp:ContentPlaceHolder>
+
+    <footer class="corporateFooter">
+        <div class="corporateFooter_inner">
+            <div class="corporateFooter_content" style="text-align:center;">
+                <p class="corporateFooter_copyright">本系統由 <a href="http://www.fast.org.tw" style="color:inherit" target="_blank"><i class="fas fa-caret-right"></i>財團法人農漁會南區資訊中心</a> <a href="https://www.buy.org.tw/index.aspx" target="_blank"><i class="fas fa-caret-right"></i><img src="/images/logo/logoBuy.png" style="width: 80px; vertical-align: text-bottom" alt="南農電鋪" /></a> <a href="http://www.fast.org.tw/ec" style="color:inherit" target="_blank"><i class="fas fa-caret-right"></i>電子商務入口網</a> 設計維護</p>
+
+            </div>
+            <!-- /.corporateFooter_content -->
+        </div>
+        <!-- /.corporateFooter_inner -->
+    </footer>
+    <!-- /.corporateFooter -->
+
+
+
+    <!-- script -->
+    <script src="/Scripts/jquery-3.6.0.min.js"></script>
+    <script src="/ext/js/main.js"></script>
+
+    <asp:ContentPlaceHolder ID="ContentPlaceHolder2" runat="server">
+    </asp:ContentPlaceHolder>
+
+</body>
+</html>

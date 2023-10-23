@@ -1,0 +1,10 @@
+﻿.list-main tr:last-child td {border-bottom:1px #c9c9c9 solid;}
+.list-main {border:1px #aaa solid;}
+    .list-main td {border-top: 1px #c9c9c9 solid;border-right: 1px #ccc solid;text-align:right;}
+    .list-main td.empty-data {text-align:center;}
+    .list-main .list-title td{text-align:center;}
+.tr-row > td, .total-row > td {
+    border-right: 1px #ccc solid;
+}
+.total-row > td {border-top:2px #666 solid; border-bottom:0!important;}
+.rptr-title {width:100%;text-align:center;font-size:18px;font-weight:bold;}
