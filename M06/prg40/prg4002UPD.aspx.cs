@@ -103,7 +103,7 @@ public partial class prg4002UPD : System.Web.UI.Page
                                 "</div>" +
                                 $"<div class='pUName'>{row["pUName"]}</div>" +
                                 $"<div class='pd-discnt'>{(-1) * (int.Parse($"{row["dtlDiscnt"]:#0}") + int.Parse($"{row["dtlDiscntShare"]:#0}"))}</div>" +
-                                $"<div class='pd-sub-total'>{row["pUName"]}</div>" +
+                                $"<div class='pd-sub-total'>{row["amtTotal"]}</div>" +
                                 $"<div class='txt-center isTax'>{(row["dtlIsTax"].ToString() == "Y" ? "應稅" : "免稅")}</div>" +
                                 $"<div class='txt-center'><input class='pdLimitDate' {(qty < 0 ? "" : "style='display:none;'")}  value='{row["pdLimitDate"]:yyyy/MM/dd}' readonly data-id='{recNo}' id='pdLimitDate_{recNo}' /></div>" +
                                 "<div class='txt-center'><button class='btn-admin btn-del pd-del'><i class='fas fa-trash'></i>刪除</button></div>" +

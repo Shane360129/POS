@@ -131,7 +131,7 @@ public partial class prg3002PRN : System.Web.UI.Page
                     }
                     if (preInStkId != "")
                     {
-                        Label2.Text += $"<tr class='inStk-tbl-footer'><td colspan='7' style='padding-right:2px;'>採購淨額︰{threeDot.To3Dot($"{preAmtNoneTax}")}　採購稅額(應)︰{threeDot.To3Dot($"{preTax}")}　合計︰{threeDot.To3Dot($"{preAmt}")}</td><td colspan='2'></td></tr>" +
+                        Label2.Text += $"<tr class='inStk-tbl-footer'><td colspan='7' style='padding-right:2px;'>採購淨額︰{$"{preAmtNoneTax}"}　採購稅額(應)︰{$"{preTax}"}　合計︰{$"{preAmt}"}</td><td colspan='2'></td></tr>" +
                         "</table>" +
                         "<div class='inStk-tbl-reptr'><span class='rptr-cell'>審　核︰</span><span class='rptr-cell'>經　辧︰</span><span class='rptr-cell'>會　計︰</span><span class='rptr-cell'>倉　管︰</span><span class='rptr-cell'>簽　收︰</span></div>";
                     }

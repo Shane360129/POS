@@ -38,7 +38,6 @@
                 $.cookie("sDate", null);
                 $.cookie("eDate", null);
                 $.cookie("outType", null);
-                $.cookie("pvSn", null);
 
                 window.location.reload();
             }
@@ -76,7 +75,6 @@
             $.cookie("sDate", $("#sDate").val());
             $.cookie("eDate", $("#eDate").val());
             $.cookie("outType", $("#outType").val());
-            $.cookie("pvSn", $("#pvSn").val());
 
         }
 

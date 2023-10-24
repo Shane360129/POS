@@ -46,7 +46,7 @@ public partial class prg7005 : System.Web.UI.Page
                     //sDate = int.Parse(DateTime.Parse(sDate).ToString("yyyyMMdd")) < int.Parse(StartYM) ? (StartYM.Substring(0, 4) + "/" + StartYM.Substring(4, 2) + "/" + StartYM.Substring(6, 2)) : sDate;
                     //eDate = eDate == "" ? DateTime.Now.ToString("yyyy/MM/dd") : eDate;
 
-                    string SqlComm = $"SELECT * FROM WP_OutStock WHERE isDel='N' AND SUBSTRING(OutStkId, 1, 8) BETWEEN '{sDate.Replace("/", "")}' AND '{eDate.Replace("/", "")}' ORDER BY OutStkId";
+                    string SqlComm = $"SELECT * FROM WP_OutStock WHERE isDel='N' AND SUBSTRING(OutStkId, 1, 8) BETWEEN '{sDate.Replace("/", "")}' AND '{eDate.Replace("/", "")}'  ORDER BY OutStkId";
                     DataTable oStkTbl = getTbl.table("WP", SqlComm);
 
                     SqlComm = $"SELECT * FROM WP_OutStockDtl WHERE isDel='N' AND SUBSTRING(OutStkId, 1, 8) BETWEEN '{sDate.Replace("/", "")}' AND '{eDate.Replace("/", "")}' ORDER BY OutStkId";
@@ -133,22 +133,15 @@ public partial class prg7005 : System.Web.UI.Page
                                                 overStr = $"、{overStr}、".Replace($"、{trcRow["pNameS"]}、", "、");
                                                 overStr = overStr == "、" ? "" : overStr.Substring(1, overStr.Length - 1);
                                             }
-                                    #endregion
+                                            #endregion
 
-                                    //iAmt = double.Parse($"{pdRows[0]["costAvg"]}") * double.Parse($"{trcRow["Qty"]}");
-                                    //iAmt += ($"{trcRow["InStkId"]}" == "0")
-                                    //            ? (double.Parse($"{trcRow["costInitial"]}") * double.Parse($"{trcRow["Qty"]}"))
-                                    //            : ($"{trcRow["InStkId"]}" == "over")
-                                    //                ? 0
-                                    //                : (double.Parse($"{trcRow["IStkAmt"]}") * double.Parse($"{trcRow["Qty"]}"));
-
-                                    iAmt += ($"{trcRow["InStkId"]}" == "0")
-                                                ? (double.Parse($"{pdRows[0]["costAvg"]}") * double.Parse($"{trcRow["Qty"]}"))
+                                            iAmt += ($"{trcRow["InStkId"]}" == "0")
+                                                ? (double.Parse($"{trcRow["costInitial"]}") * double.Parse($"{trcRow["Qty"]}"))
                                                 : ($"{trcRow["InStkId"]}" == "over")
                                                     ? 0
-                                                    : (double.Parse($"{pdRows[0]["costAvg"]}") * double.Parse($"{trcRow["Qty"]}"));
-
-                                    oStkDtlRows = $"{trcRow["OutStkDtlSn"]}".IndexOf("cb") < 0
+                                                    : (double.Parse($"{trcRow["IStkAmt"]}") * double.Parse($"{trcRow["Qty"]}"));
+                                            
+                                            oStkDtlRows = $"{trcRow["OutStkDtlSn"]}".IndexOf("cb") < 0
                                                 ? oStkDtlTbl.Select($"OutStkId='{row["OutStkId"]}' AND sn={trcRow["OutStkDtlSn"]}")
                                                 : oStkDtlCbTbl.Select($"OutStkId='{row["OutStkId"]}' AND sn={($"{trcRow["OutStkDtlSn"]}".Replace("cb", ""))}");
                                             if (preDtlSn != $"{trcRow["OutStkDtlSn"]}")
@@ -157,8 +150,6 @@ public partial class prg7005 : System.Web.UI.Page
                                                 preDtlSn = $"{trcRow["OutStkDtlSn"]}";
                                             }
                                         }
-
-
                                         discnt += discntDtl;
                                         oAmt = int.Parse($"{row["amount"]:#0}");
                                         oProfit = Math.Round(oAmt - iAmt);
@@ -216,18 +207,13 @@ public partial class prg7005 : System.Web.UI.Page
                                                 overStr = overStr == "、" ? "" : overStr.Substring(1, overStr.Length - 1);
                                             }
 
-                                    //iAmt += ($"{trcRow["InStkId"]}" == "0")
-                                    //    ? (double.Parse($"{trcRow["costInitial"]}") * double.Parse($"{trcRow["Qty"]}"))
-                                    //    : ($"{trcRow["InStkId"]}" == "over")
-                                    //        ? 0
-                                    //        : (double.Parse($"{trcRow["IStkAmt"]}") * double.Parse($"{trcRow["Qty"]}"));
-                                    iAmt += ($"{trcRow["InStkId"]}" == "0")
-                                        ? (double.Parse($"{pdRows[0]["costAvg"]}") * double.Parse($"{trcRow["Qty"]}"))
-                                        : ($"{trcRow["InStkId"]}" == "over")
-                                            ? 0
-                                            : (double.Parse($"{pdRows[0]["costAvg"]}") * double.Parse($"{trcRow["Qty"]}"));
-
-                                    oStkDtlRows = $"{trcRow["OutStkDtlSn"]}".IndexOf("cb") < 0
+                                            iAmt += ($"{trcRow["InStkId"]}" == "0")
+                                                ? (double.Parse($"{trcRow["costInitial"]}") * double.Parse($"{trcRow["Qty"]}"))
+                                                : ($"{trcRow["InStkId"]}" == "over")
+                                                    ? 0
+                                                    : (double.Parse($"{trcRow["IStkAmt"]}") * double.Parse($"{trcRow["Qty"]}"));
+                                            
+                                            oStkDtlRows = $"{trcRow["OutStkDtlSn"]}".IndexOf("cb") < 0
                                                 ? oStkDtlTbl.Select($"OutStkId='{row["OutStkId"]}' AND sn={trcRow["OutStkDtlSn"]}")
                                                 : oStkDtlCbTbl.Select($"OutStkId='{row["OutStkId"]}' AND sn={($"{trcRow["OutStkDtlSn"]}".Replace("cb", ""))}");
                                             if (preDtlSn != $"{trcRow["OutStkDtlSn"]}")

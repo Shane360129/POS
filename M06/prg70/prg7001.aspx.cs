@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using System;
+using System.Activities.Statements;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -90,15 +91,17 @@ public partial class prg7001 : System.Web.UI.Page
 
                     string tblTitle = "<table class='list-main inStk-list-main' style='border-spacing:1px;'>" +
                         "<tr class='list-title'>" +
-                            "<td rowspan='2' style='text-align:left'>項目</td><td rowspan='2'>商品</td><td style='text-align:center'>上月</td><td colspan='10' style='text-align:center'>本月</td>" +
+                            "<td rowspan='2' style='text-align:left'>項目</td><td rowspan='2'>商品</td><td colspan='2' style='text-align:center'>上月</td>" +
+                            "<td colspan='10' style='text-align:center'>本月</td>" +
                        "</tr>" +
                        "<tr class='list-title l-title2'>" +
-                            "<td class='pre-month'>結存數</td><td>進貨數</td><td>進貨成本</td><td>銷售數</td><td>銷售金額</td><td>庫存數</td><td>庫存成本(單)</td><td>庫存成本(總)</td><td>銷售成本</td><td>銷售利潤</td><td>利潤率%</td>" +
+                            "<td class='pre-month'>結存數</td><td>庫存成本(總)</td><td>進貨數</td><td>進貨成本</td><td>銷售數</td><td>銷售金額</td>" +
+                            "<td>庫存數</td><td>庫存成本(單)</td><td>庫存成本(總)</td><td>銷售成本</td><td>銷售利潤</td><td>利潤率%</td>" +
                         "</tr>";
                     Label2.Text += $"<input type='hidden' id='chkYM' value='{chkYM}'>";
                     if (chkYM == "N")
                     {
-                        Label2.Text += $"<tr><td colspan='11' class='empty-data'>尚未結帳！</td></tr>";
+                        Label2.Text += $"<tr><td colspan='12' class='empty-data'>尚未結帳！</td></tr>";
                     }
                     else
                     {
@@ -112,7 +115,8 @@ public partial class prg7001 : System.Web.UI.Page
                         SqlComm = $"SELECT pNo, pNameS, SUM(amtTotal) AS amtTotal, SUM(qty) AS qtyTotal FROM WP_vInStock WHERE isDel='N' AND dtlIsDel='N' AND SUBSTRING(InStkId, 1, 6)='{rptrYM}' GROUP BY pNo, pNameS";
                         DataTable istkTbl = getTbl.table("WP", SqlComm);    //進貨成本, 進貨數
 
-                        SqlComm = $"SELECT pNo, pNameS, SUM(amtTotal-(dtlDiscnt + dtlDiscntShare)) AS amtTotal, SUM(qty) AS qtyTotal FROM WP_vOutStockUnion WHERE isDel='N' AND dtlIsDel='N' AND SUBSTRING(OutStkId, 1, 6)='{rptrYM}' GROUP BY pNo, pNameS";
+                        SqlComm = $"SELECT pNo, pNameS, SUM(amtTotal-(dtlDiscnt + dtlDiscntShare)) AS amtTotal, SUM(qty) AS qtyTotal FROM WP_vOutStockUnion " +
+                            $"WHERE isDel='N' AND dtlIsDel='N' AND SUBSTRING(OutStkId, 1, 6)='{rptrYM}' GROUP BY pNo, pNameS";
                         DataTable ostkTbl = getTbl.table("WP", SqlComm);    //銷售金額, 銷售數
 
                         SqlComm = $"SELECT pNo, pNameS, SUM(oStkCost * Qty) AS costTotal, SUM(Qty) AS qtyTotal FROM WP_vStkTraceUnion WHERE Kind<>'D' AND SUBSTRING(OutStkId, 1, 6)='{rptrYM}' GROUP BY pNo, pNameS";
@@ -144,8 +148,8 @@ public partial class prg7001 : System.Web.UI.Page
                         SqlComm = $"SELECT * FROM WP_pdStkQtyYM WHERE YearMonth='{preYear}{preMonth.PadLeft(2, '0')}' AND isDel='N'";
                         DataTable preStkTbl = getTbl.table("WP", SqlComm);
 
-                        SqlComm = $"SELECT * FROM WP_pdStkQtyYM WHERE YearMonth='{preYear}{Month.PadLeft(2, '0')}' AND isDel='N'";
-                        DataTable preStk_Tbl = getTbl.table("WP", SqlComm);
+                        //SqlComm = $"SELECT * FROM WP_pdStkQtyYM WHERE YearMonth='{preYear}{Month.PadLeft(2, '0')}' AND isDel='N'";
+                        //DataTable preStk_Tbl = getTbl.table("WP", SqlComm);
 
                         var pkname = pKSId == "0" ? "" : pdTbl.Rows[0]["pKSName"].ToString();
 
@@ -160,7 +164,7 @@ public partial class prg7001 : System.Web.UI.Page
 
                             ThreeDot threeDot = new ThreeDot();
                             DataRow[] pstkRows, istkRows, ostkRows, oCostRows, proInitialRows, pstk_Rows, thisStkRows = null;
-                            double iAmt, iCost, stkLeftAmt, oStkAmt, oProfit, preCost, initlCost, pFitPercent, pdStkLAmt, avgCost,Cost,oCost, proInitialCost, pre_Cost;
+                            double iAmt, iCost, stkLeftAmt, oStkAmt, oProfit, preCost, initlCost, pFitPercent, pdStkLAmt, avgCost,Cost,oCost, proInitialCost, pre_Cost, preCostTotal;
                             int recNo = 1, preQty, iQty, oQty, oAmt, stkQty, oStkQty, initlQty,InOutQty;
 
 
@@ -176,24 +180,28 @@ public partial class prg7001 : System.Web.UI.Page
                             foreach (DataRow row in pdTbl.Rows)
                             {
                                 if (thisStkTbl.Rows.Count > 0) { thisStkRows = thisStkTbl.Select($"pNo='{row["pNo"]}'"); }  //庫存檔
-
+                               
                                 initlQty = int.Parse($"{row["qtyInitial"]}");
                                 initlCost = double.Parse($"{row["costInitial"]}");
-                                avgCost = double.Parse($"{row["costAvg"]}");
+                                avgCost = double.Parse ($"{row["costAvg"]}");
+
+                                int pNo = int.Parse ($"{row["pNo"]}");
 
                                 proInitialRows = proInTbl.Select($"pNo='{row["pNo"]}'");
 
+                                if (pNo == 1861) { 
+                                    Console.WriteLine (123); };
                                 pstkRows = preStkTbl.Select($"pNo='{row["pNo"]}'");
                                 istkRows = istkTbl.Select($"pNo='{row["pNo"]}'");
                                 ostkRows = ostkTbl.Select($"pNo='{row["pNo"]}'");
 
-                                pstk_Rows = preStk_Tbl.Select($"pNo='{row["pNo"]}'");
-
+                                pstk_Rows = preStkTbl.Select($"pNo='{row["pNo"]}'");
 
                                 proInitialCost = proInitialRows.Length == 0 ? 0 : toDouble.Numer(double.Parse($"{proInitialRows[0]["costAvg"]}"), pointQty); 
 
                                 preQty = pstkRows.Length == 0 ? 0 : int.Parse($"{pstkRows[0]["qty"]}");
-                                preCost = pstkRows.Length == 0 ? 0 : double.Parse($"{pstkRows[0]["cost"]}");
+                                preCost = pstkRows.Length == 0 ? 0 : double.Parse ($"{pstkRows[0]["cost"]}");
+                                preCostTotal = preQty * preCost;
 
                                 pre_Cost = pstk_Rows.Length == 0 ? 0 : double.Parse($"{pstk_Rows[0]["cost"]}");
 
@@ -216,73 +224,71 @@ public partial class prg7001 : System.Web.UI.Page
 
                                     Label2.Text += $"<tr class='tr-row' data-updstk='{row["isUpdStock"]}'>" +
                                         $"<td>{recNo}</td>" +
-                                        $"<td style='text-align:left;white-space:nowrap;'><span style='margin-right:5px'>{row["pBarcode"]}</span>{row["pNameS"]}</td>" +
+                                        $"<td class='pNo' data-val='{pNo} style='text-align:left;white-space:nowrap;'><span style='margin-right:5px'>{row["pBarcode"]}</span>{row["pNameS"]}</td>" +
                                         $"<td class='preQty' data-val='{preQty}' data-cost='{preCost}'>{threeDot.To3Dot($"{preQty}")}</td>" +
+                                        $"<td class='preCost' data-val='{toDouble.Numer (preCostTotal, pointQty)}' data-cost='{preCostTotal}'>{threeDot.To3Dot ($"{preCostTotal}")}</td>" +
                                         $"<td class='iQty' data-val='{iQty}'>{threeDot.To3Dot($"{iQty}")}</td>" +
                                         $"<td class='iAmt' data-val='{iAmt}'>{threeDot.To3Dot($"{iAmt}")}</td>" +
                                         $"<td class='oQty' data-val='{oQty}'>{threeDot.To3Dot($"{oQty}")}</td>" +
                                         $"<td class='oAmt' data-val='{oAmt}'>{threeDot.To3Dot($"{oAmt}")}</td>" +
                                         $"<td class='stkQty' data-val='{stkQty}'>{threeDot.To3Dot($"{stkQty}")}</td>";
+                        
+                                    stkLeftAmt = 0;     //庫存成本
+                                    double preQtyPlusIQty = preQty + iQty; //期初庫存數+本期進貨數
+                                    double Cost2;
 
-                                        stkLeftAmt = 0;     //庫存成本
-                                        if (stkQty > 0) //庫存數
-                                        {
-                                            stkLeftAmt = (preQty >= oQty) //preQty:上月結存數 / oQty:銷售數
-                                                ? ((preQty - oQty) * preCost) + iAmt
-                                                : stkQty * iCost;
-                                        }
-
-                                       
-
+                                    Cost2 = preQtyPlusIQty != 0 ?(preCostTotal + iAmt) / preQtyPlusIQty : 0; //(期初庫存成本+本期進貨)/(期初庫存數+本期進貨數)
+                                    Cost2 = Math.Round (Cost2, 2);
+                                   
                                     oStkAmt = 0;        //銷售成本
-                                        oStkQty = 0;
-                                        if (oQty > 0)
-                                        {
-                                            oCostRows = oCostTbl.Select($"pNo='{row["pNo"]}'");
-                                            if (oCostRows.Length > 0)
-                                            {
-                                                oStkAmt = double.Parse($"{oCostRows[0]["costTotal"]}");
-                                                oStkQty = int.Parse($"{oCostRows[0]["qtyTotal"]}");
-                                            }
-                                        }
-                                        //oCost = result <= 0 ? oStkAmt : (oQty > 0 ? avgCost* oQty : 0);
-                                        oCost = result <= 0 ? oStkAmt : (oQty > 0 ? pre_Cost * oQty : 0);
-                                        oCost = stkQty == 0 ? ((preQty * proInitialCost) + iAmt) : oCost;
-                                        //oCost = pstkRows.Length == 0 ? 0 : int.Parse($"{pstkRows[0]["cost"]}");
-                                    //int aaa = 0;
-                                    //if (row["pNo"].ToString() == "321")
-                                    //     aaa = 4;
+                                    oStkQty = 0;
 
-                                    if (proInitialRows.Length == 0)
-                                        //Cost = result <= 0 ? stkLeftAmt : avgCost * stkQty;
-                                        Cost = result <= 0 ? stkLeftAmt : pre_Cost * stkQty;
-                                    else
-                                        Cost = result <= 0 ? stkLeftAmt : (stkQty == 0 ? 0 : ((preQty * proInitialCost) + iAmt - oCost));
-                                    
-                                    Cost= Math.Round(Cost, 4);
-                                    //Cost = result <= 0 ? stkLeftAmt : ((avgCost * InOutQty) + (preQty * proInitialCost));
+                                    oCost = result <= 0 ? oStkAmt : Cost2 * oQty ;  // 根據 result 的值選擇使用 oStkAmt 或 (Cost2 * oQty) 作為銷售成本
+                                    oCost = stkQty == 0 ? (preCostTotal + iAmt) : oCost; // 如果庫存數為 0，則將 oCost 設為 (期初庫存成本 + 本期進貨)
+                                    double com =  preCostTotal + iAmt - oCost;
                                     oProfit = oAmt - oCost;
-                                    pdStkLAmt = stkQty == 0 ? 0 : Cost / stkQty ;
-                                    pFitPercent = oAmt == 0 ? 0 : (oProfit / oAmt * 100);
+                                    pdStkLAmt = stkQty == 0 ? 0 : Cost2; // 如果庫存數為 0，則 pdStkLAmt 為 0，否則為 Cost2
+                                    pFitPercent = oAmt == 0 ? 0 : (oProfit / oAmt * 100); // 如果 oAmt 為 0，則 pFitPercent 為 0，否則為 (oProfit / oAmt * 100)
+                                    stkLeftAmt = stkQty > 0 ? pdStkLAmt* stkQty : 0; // 如果庫存數大於 0，則計算庫存成本
+
+                                    if (iAmt < 0)
+                                        {
+                                        oCost = 0;
+                                        }
                                         Label2.Text += 
-                                        //$"<td data-val='{toDouble.Numer(pdStkLAmt, pointQty)}'>{threeDot.To3Dot($"{pdStkLAmt.ToString(pointRule)}")}</td>" +
-                                        $"<td data-val='{toDouble.Numer(pdStkLAmt, pointQty)}'>{threeDot.To3Dot($"{pdStkLAmt.ToString(pointRule)}")}</td>" +
-                                        $"<td class='stkCost' data-val='{toDouble.Numer(Cost, pointQty)}'>{threeDot.To3Dot($"{toDouble.Numer(Cost, pointQty).ToString(pointRule)}")}</td>" +
+                                        $"<td class='pdStkLAmt' data-val='{toDouble.Numer(pdStkLAmt, pointQty)}'>{threeDot.To3Dot($"{pdStkLAmt.ToString(pointRule)}")}</td>" +
+                                        $"<td class='stkCost' data-val='{toDouble.Numer(stkLeftAmt, pointQty)}'>{threeDot.To3Dot($"{toDouble.Numer(stkLeftAmt, pointQty).ToString(pointRule)}")}</td>" +
                                         $"<td class='oCost' data-val='{toDouble.Numer(oCost, pointQty)}'>{threeDot.To3Dot($"{toDouble.Numer(oCost, pointQty).ToString(pointRule)}")}</td>" +
                                         $"<td class='oProfit' data-val='{toDouble.Numer(oProfit, pointQty)}'>{threeDot.To3Dot($"{toDouble.Numer(oProfit, pointQty).ToString(pointRule)}")}</td>" +
                                         $"<td class='pFitPercent' data-val='{toDouble.Numer(pFitPercent, pointQty)}'>{threeDot.To3Dot(pFitPercent.ToString(pointRule))}</td>" +
                                     "</tr>";
                                     #region 更新庫存檔
-                                    SqlComm = (thisStkRows == null || thisStkRows.Length == 0)
-                                        ? $"INSERT INTO WP_pdStkQtyYM (pNo, qty, cost, YearMonth) VALUES ('{row["pNo"]}', '{stkQty}', '{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', '{rptrYM}')"
-                                        : $"UPDATE WP_pdStkQtyYM SET qty='{stkQty}', cost='{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
-                                    getTbl.updTbl ("WP", SqlComm);
-                                    #endregion
+                                    string checkYM = DateTime.Now.ToString ("yyyyMM");
+                                    if (rptrYM == checkYM)
+                                        {
+                                        if (thisStkRows == null || thisStkRows.Length == 0)
+                                            {
+                                            SqlComm = $"INSERT INTO WP_pdStkQtyYM (pNo, qty, cost, YearMonth) VALUES ('{pNo}', '{stkQty}', '{(stkLeftAmt == 0 ? 0 : toDouble.Numer (stkLeftAmt / stkQty, 2))}', '{rptrYM}')";
+                                            getTbl.updTbl ("WP", SqlComm);
+                                            }
+                                        else { 
+                                        SqlComm = $"UPDATE WP_pdStkQtyYM SET qty='{stkQty}', cost='{(stkLeftAmt == 0 ? 0 : toDouble.Numer (stkLeftAmt / stkQty, 2))}', " +
+                                            $"isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
+                                            getTbl.updTbl ("WP", SqlComm);
+                                            }
+                                        }
 
-                                    // EXCEL檔案下載
-                                    Input (recNo.ToString(), row["pBarcode"].ToString() + "-" + row["pNameS"].ToString(), preQty.ToString(),
+                                        //SqlComm = (thisStkRows == null || thisStkRows.Length == 0)
+                                        //   ? $"INSERT INTO WP_pdStkQtyYM (pNo, qty, cost, YearMonth) VALUES ('{row["pNo"]}', '{stkQty}', '{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', '{rptrYM}')"
+                                        //   : $"UPDATE WP_pdStkQtyYM SET qty='{stkQty}', cost='{(stkLeftAmt == 0 ? 0 : toDouble.Numer ((stkLeftAmt / stkQty), 2))}', isDel='N', timeUpdate=getdate() WHERE pNo='{row["pNo"]}' AND YearMonth='{rptrYM}'";
+                                        //getTbl.updTbl ("WP", SqlComm);
+
+                                        #endregion
+
+                                        // EXCEL檔案下載
+                                        Input (recNo.ToString(), row["pBarcode"].ToString() + "-" + row["pNameS"].ToString(), preQty.ToString(), preCostTotal.ToString(),
                                         iQty.ToString(), iAmt.ToString(), oQty.ToString(), oAmt.ToString(), stkQty.ToString(),
-                                        pdStkLAmt.ToString(pointRule), toDouble.Numer(Cost, pointQty).ToString(pointRule),
+                                        pdStkLAmt.ToString(pointRule), toDouble.Numer(stkLeftAmt, pointQty).ToString(pointRule),
                                         toDouble.Numer(oCost, pointQty).ToString(pointRule), toDouble.Numer(oProfit, pointQty).ToString(pointRule), pFitPercent.ToString(pointRule));
                                     recNo++;
 
@@ -296,7 +302,6 @@ public partial class prg7001 : System.Web.UI.Page
                                         getTbl.updTbl ("WP", SqlComm);
                                         }
                                     #endregion
-
                                 }
                             }
 
@@ -306,6 +311,7 @@ public partial class prg7001 : System.Web.UI.Page
                             Label2.Text += "<tr class='total-row'>" +
                                 "<td colspan='2'>合計</td>" +
                                 $"<td class='preQty-total'></td>" +
+                                $"<td class='preCost-total'></td>" +
                                 $"<td class='iQty-total'></td>" +
                                 $"<td class='iAmt-total'></td>" +
                                 $"<td class='oQty-total'></td>" +
@@ -338,6 +344,7 @@ public partial class prg7001 : System.Web.UI.Page
         public string Number { get; set; } //項目
         public string Name { get; set; } //商品名稱
         public string LastQty { get; set; } //上月結存數
+        public string LastCost { get; set; } //上月結存數
         public string PurchaseQty { get; set; } //進貨數
         public string PurchaseCost { get; set; } //進貨成本
         public string SalesQty { get; set; } //銷售數量
@@ -348,7 +355,6 @@ public partial class prg7001 : System.Web.UI.Page
         public string SalesCost { get; set; } //銷售成本
         public string SalesProfit { get; set; } //銷售利潤 
         public string ProfitMargin { get; set; } //利潤 
-
     }
     #endregion
     #region 欄位表頭設定
@@ -360,6 +366,7 @@ public partial class prg7001 : System.Web.UI.Page
             Number = "項目",
             Name = "商品名稱",
             LastQty = "上月結存數",
+            LastCost = "上月庫存成本",
             PurchaseQty = "進貨數",
             PurchaseCost = "進貨成本",
             SalesQty = "銷售數量",
@@ -374,13 +381,14 @@ public partial class prg7001 : System.Web.UI.Page
     }
     #endregion
     #region 欄位表身寫入
-    public void Input(string num, string name, string lq, string pq, string pc, string sq, string sa, string qn, string isc, string itc, string sc, string sp, string pm)
+    public void Input(string num, string name, string lq, string lc, string pq, string pc, string sq, string sa, string qn, string isc, string itc, string sc, string sp, string pm)
     {
         dataList.Add(new Lable_7001()
         {
             Number = num,
             Name = name,
             LastQty = lq,
+            LastCost = lc,
             PurchaseQty = pq,
             PurchaseCost = pc,
             SalesQty = sq,
@@ -411,17 +419,18 @@ public partial class prg7001 : System.Web.UI.Page
         {
             worksheet.Cell(j, 1).Value = dataList[j - 1].Number;
             worksheet.Cell(j, 2).Value = dataList[j - 1].Name;
-            worksheet.Cell(j, 3).Value = dataList[j - 1].LastQty;
-            worksheet.Cell(j, 4).Value = dataList[j - 1].PurchaseQty;
-            worksheet.Cell(j, 5).Value = dataList[j - 1].PurchaseCost;
-            worksheet.Cell(j, 6).Value = dataList[j - 1].SalesQty;
-            worksheet.Cell(j, 7).Value = dataList[j - 1].SalesAmount;
-            worksheet.Cell(j, 8).Value = dataList[j - 1].QtyNow;
-            worksheet.Cell(j, 9).Value = dataList[j - 1].InventorySingleCost;
-            worksheet.Cell(j, 10).Value = dataList[j - 1].InventoryTotalCost;
-            worksheet.Cell(j, 11).Value = dataList[j - 1].SalesCost;
-            worksheet.Cell(j, 12).Value = dataList[j - 1].SalesProfit;
-            worksheet.Cell(j, 13).Value = dataList[j - 1].ProfitMargin;
+            worksheet.Cell (j, 3).Value = dataList[j - 1].LastQty;
+            worksheet.Cell (j, 4).Value = dataList[j - 1].LastCost;
+            worksheet.Cell(j, 5).Value = dataList[j - 1].PurchaseQty;
+            worksheet.Cell(j, 6).Value = dataList[j - 1].PurchaseCost;
+            worksheet.Cell(j, 7).Value = dataList[j - 1].SalesQty;
+            worksheet.Cell(j, 8).Value = dataList[j - 1].SalesAmount;
+            worksheet.Cell(j, 9).Value = dataList[j - 1].QtyNow;
+            worksheet.Cell(j, 10).Value = dataList[j - 1].InventorySingleCost;
+            worksheet.Cell(j, 11).Value = dataList[j - 1].InventoryTotalCost;
+            worksheet.Cell(j, 12).Value = dataList[j - 1].SalesCost;
+            worksheet.Cell(j, 13).Value = dataList[j - 1].SalesProfit;
+            worksheet.Cell(j, 14).Value = dataList[j - 1].ProfitMargin;
         }
         worksheet.Columns().AdjustToContents();//自動調整欄位寬度
 

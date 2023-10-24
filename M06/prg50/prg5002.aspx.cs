@@ -127,15 +127,19 @@ public partial class prg5002 : System.Web.UI.Page
                     }
                     else
                     {
-                        ThreeDot threeDot = new ThreeDot();
-                        string preId = "", main_data_id = "", preInStkId = "", detail_data_id = "";
-                        foreach (DataRow row in acctOutTbl.Rows)
+                    ThreeDot threeDot = new ThreeDot();
+                    string preId = "", main_data_id = "", preInStkId = "", detail_data_id = "";
+                    double inStkAmtTotal = 0, amtTotal = 0, dtlPayLeft = 0;
+                    foreach (DataRow row in acctOutTbl.Rows)
                         {
                             main_data_id = preId != row["sn"].ToString() ? $"{row["sn"]}" : "";
                             detail_data_id = main_data_id == "" ? preInStkId != row["InStkId"].ToString() ? $"{row["InStkId"]}" : "" : $"{row["InStkId"]}";
-                            double dtlAmt = toDouble.Numer(double.Parse($"{row["dtlAmt"]}"), 2);
+                        double dtlAmt = toDouble.Numer (double.Parse ($"{row["dtlAmt"]}"), 2);
+                        inStkAmtTotal += double.Parse ($"{row["inStkAmtTotal"]:#0.00}");
+                        amtTotal += double.Parse ($"{row["amtTotal"]:#0.00}");
+                        dtlPayLeft += double.Parse ($"{row["dtlPayLeft"]:#0.00}");
 
-                            Label2.Text += "<tr>" +
+                        Label2.Text += "<tr>" +
                                 $"<td class='row-main' data-id='{main_data_id}'><a href='/prg50/prg5002Upd.aspx?sn={row["sn"]}' class='link-tag'><i class='far fa-hand-point-up'></i> {row["acctOutId"]}</a></div>" +
                                 $"<td class='row-main' data-id='{main_data_id}'>{row["acctOutDate"]:yyyy/MM/dd}</div>" +
                                 $"<td class='row-main' data-id='{main_data_id}'>{row["pvId"]}-{row["pvNameS"]}</td>" +
@@ -149,6 +153,13 @@ public partial class prg5002 : System.Web.UI.Page
                             preId = row["sn"].ToString();
                             preInStkId = row["InStkId"].ToString();
                         }
+                    Label2.Text += "<tr class='total-row'>" +
+                        "<td colspan='5' style='text-align:right'>合計</td>" +
+                        $"<td style='text-align:right'>{threeDot.To3Dot ($"{toDouble.Numer (inStkAmtTotal, 2):#0.00}")}</td>" +
+                        $"<td style='text-align:right'>{threeDot.To3Dot ($"{toDouble.Numer (amtTotal, 2):#0.00}")}</td>" +
+                        $"<td style='text-align:right'>{threeDot.To3Dot ($"{toDouble.Numer (dtlPayLeft, 2):#0.00}")}</td>" +
+                        $"<td></td>" +
+                    "</tr>";
                     }
                 Label2.Text += "</table>";
             }

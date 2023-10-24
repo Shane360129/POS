@@ -457,10 +457,10 @@ public class PayKind
         {
             html = "<div id='pay-list-grp' style='display:flex;align-items:center'>" +
                 "<div class='pay-row'>" +
-                    $"{payList}<i class='fas fa-plus-circle btn-pay-add' style='color:#080;margin:0 20px 0 5px;'></i>" +
+                    $"{payList}<i class='fas fa-plus-circle btn-pay btn-pay-add' style='color:#080;margin:0 20px 0 5px;'></i>" +
                 "</div>" +
             "</div>" +
-            $"<div id='pk-list-add' style='display:none;'><div class='pay-row'>{payList}<i class='fas fa-minus-circle btn-pay-del' style='color:#f00;margin:0 20px 0 5px;'></i></div></div>";
+            $"<div id='pk-list-add' style='display:none;'><div class='pay-row'>{payList}<i class='fas fa-minus-circle btn-pay btn-pay-del' style='color:#f00;margin:0 20px 0 5px;'></i></div></div>";
         }
         else
         {
@@ -475,13 +475,13 @@ public class PayKind
                             $"<select class='pay-group pay-kind' class='form-control' style='margin-right:5px;'>{HTML($"{pay["PAYID"]}", "")}</select>" +
                             $"<input type='text' class='form-control chk-input pay-group pay-amt' data-func='real_number' maxlength='6' style='width:75px;' value='{pay["PAYAMT"]}' />";
                             html += recNo == 0
-                                ? $"<i class='fas fa-plus-circle pay-group btn-pay-add' style='color:#080;margin:0 20px 0 5px;cursor:pointer;'></i>"
-                                : $"<i class='fas fa-minus-circle pay-group btn-pay-del' style='color:#f00;margin:0 20px 0 5px;cursor:pointer;'></i>";
+                                ? $"<i class='fas fa-plus-circle pay-group btn-pay btn-pay-add' style='color:#080;margin:0 20px 0 5px;cursor:pointer;'></i>"
+                                : $"<i class='fas fa-minus-circle pay-group btn-pay btn-pay-del' style='color:#f00;margin:0 20px 0 5px;cursor:pointer;'></i>";
                         html += "</div>";
                         recNo++;
                     }
                 html += "</div>" +
-                $"<div id='pk-list-add' style='display:none;'><div class='pay-row'>{payList}<i class='fas fa-minus-circle pay-group btn-pay-del' style='color:#f00;margin:0 20px 0 5px;'></i></div></div>";
+                $"<div id='pk-list-add' style='display:none;'><div class='pay-row'>{payList}<i class='fas fa-minus-circle pay-group btn-pay btn-pay-del' style='color:#f00;margin:0 20px 0 5px;'></i></div></div>";
 
             }
             catch (InvalidOperationException ex)

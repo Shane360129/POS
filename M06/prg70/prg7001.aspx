@@ -41,13 +41,15 @@
 
         function CalcTotal() {
             if ($("#chkYM").val() == "Y") {
-                var preQty, iQty, iAmt, oQty, oAmt, stkQty, stkCost, oCost, oProfit;
-                var preQtyTotal = 0, iQtyTotal = 0, iAmtTotal = 0, oQtyTotal = 0, oAmtTotal = 0, stkQtyTotal = 0, stkCostTotal = 0, oCostTotal = 0, oProfitTotal = 0;
+                var preQty, preCost, iQty, iAmt, oQty, oAmt, stkQty, stkCost, oCost, oProfit, pNo;
+                var preQtyTotal = 0, preCostTotal = 0, iQtyTotal = 0, iAmtTotal = 0, oQtyTotal = 0, oAmtTotal = 0, stkQtyTotal = 0, stkCostTotal = 0, oCostTotal = 0, oProfitTotal = 0;
                 var oProfitFinal;
                 var $this;
                 $(".tr-row").each(function () {
                     $this = $(this);
+                    pNo = parseInt($this.find(".pNo").attr("data-val"));
                     preQty = parseInt($this.find(".preQty").attr("data-val"));
+                    preCost = parseFloat($this.find(".preCost").attr("data-val"));
                     iQty = parseInt($this.find(".iQty").attr("data-val"));
                     iAmt = parseFloat($this.find(".iAmt").attr("data-val"));
                     oQty = parseInt($this.find(".oQty").attr("data-val"));
@@ -58,16 +60,23 @@
                     oProfit = parseFloat($this.find(".oProfit").attr("data-val"));
 
                     preQtyTotal += preQty;
-                    iQtyTotal += iQty;
-                    iAmtTotal += iAmt;
-                    oQtyTotal += oQty;
+                    preCostTotal += preCost;
+                    if (pNo != 182 && pNo != 183 && pNo != 184 && pNo != 185 && pNo != 251 && pNo != 252
+                        //&& pNo != 321
+                    )
+                    {
+                        iQtyTotal += iQty;
+                        oQtyTotal += oQty;
+                        iAmtTotal += iAmt;
+                        stkQtyTotal += stkQty;
+                        stkCostTotal += stkCost;
+                        oCostTotal += oCost;
+                        oProfitTotal += oProfit;
+                    }
                     oAmtTotal += oAmt;
-                    stkQtyTotal += stkQty;
-                    stkCostTotal += stkCost;
-                    oCostTotal += oCost;
-                    oProfitTotal += oProfit;
                 });
-                $(".preQty-total").text(to3dot(preQtyTotal));
+                $(".preQty-total").text(to3dot(preQtyTotal)); 
+                $(".preCost-total").text(to3dot(roundToPoint(preCostTotal, pointQty)));
                 $(".iQty-total").text(to3dot(iQtyTotal));
                 $(".iAmt-total").text(to3dot(iAmtTotal));
                 $(".oQty-total").text(to3dot(oQtyTotal));

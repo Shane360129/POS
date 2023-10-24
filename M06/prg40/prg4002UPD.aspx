@@ -346,6 +346,7 @@
                             "'pNo':'" + $this.attr("data-id") + "'," +
                             "'amount':'" + $this.find(".dtlAmt .edit-txt").val() + "'," +
                             "'qty':'" + $this.find(".pd-qty span").text() + "'," +
+                            "'amtTotal':'" + $this.find(".pd-sub-total").text() + "'," +
                             "'pdLimitDate':'" + $this.find(".pdLimitDate").val() + "'}";
                     });
                     pd_list = "[" + pd_list + "]";

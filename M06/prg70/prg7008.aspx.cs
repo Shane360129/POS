@@ -28,8 +28,7 @@ public partial class prg7008 : System.Web.UI.Page
 
                 string sDate = WebUtility.UrlDecode(cookies.Read("sDate")),
                     eDate = WebUtility.UrlDecode(cookies.Read("eDate"));
-                string outType = cookies.Read("outType"),
-                       pvSn = cookies.Read("pvSn");
+                string outType = cookies.Read("outType");
 
                 sDate = sDate == "" ? DateTime.Now.AddMonths(-1).ToString("yyyy/MM/01") : sDate;
                 sDate = int.Parse(DateTime.Parse(sDate).ToString("yyyyMMdd")) < int.Parse(StartYM) ? (StartYM.Substring(0, 4) + "/" + StartYM.Substring(4, 2) + "/" + StartYM.Substring(6, 2)) : sDate;
@@ -45,7 +44,6 @@ public partial class prg7008 : System.Web.UI.Page
                         SqlComm = $"SELECT InStkId,InStkDate,pvId,pvName,amount,payLeft ,(amount-payLeft) as pay " +
                        $"FROM WP_vInStock WHERE isDel='N' AND dtlIsDel='N' " +
                        $"AND (InStkDate BETWEEN '{sDate}' AND '{eDate} 23:59:59') " +
-                       $"{(pvSn == "" ? "" : $"AND pvSn='{pvSn}'")} " +
                        $"AND pvId <> 'stkUpd' " +
                        $"AND payType IN (2) " +
                        $"group by pvId,pvName,InStkId,InStkDate,amount,payLeft,(amount-payLeft) " +
@@ -57,7 +55,6 @@ public partial class prg7008 : System.Web.UI.Page
                         SqlComm = $"SELECT InStkId,InStkDate,pvId,pvName,amount,payLeft ,(amount-payLeft) as pay " +
                            $"FROM WP_vInStock WHERE isDel='N' AND dtlIsDel='N' " +
                            $"AND (InStkDate BETWEEN '{sDate}' AND '{eDate} 23:59:59') " +
-                           $"{(pvSn == "" ? "" : $"AND pvSn='{pvSn}'")} " +
                            $"AND pvId <> 'stkUpd' " +
                            $"AND payType IN (0,1) " +
                            $"group by pvId,pvName,InStkId,InStkDate,amount,payLeft,(amount-payLeft) " +
@@ -68,7 +65,6 @@ public partial class prg7008 : System.Web.UI.Page
                      SqlComm = $"SELECT InStkId,InStkDate,pvId,pvName,amount,payLeft ,(amount-payLeft) as pay " +
                         $"FROM WP_vInStock WHERE isDel='N' AND dtlIsDel='N' " +
                         $"AND (InStkDate BETWEEN '{sDate}' AND '{eDate} 23:59:59') " +
-                        $"{(pvSn == "" ? "" : $"AND pvSn='{pvSn}'")} " +
                         $"AND pvId <> 'stkUpd' " +
                         $"group by pvId,pvName,InStkId,InStkDate,amount,payLeft,(amount-payLeft) " +
                         $"ORDER BY InStkDate,InStkId,pvId ";
@@ -93,20 +89,8 @@ public partial class prg7008 : System.Web.UI.Page
                                     $"<option value='0' {(outType == "0" ? "selected" : "")}>已付</option>" +
                                     $"<option value='1' {(outType == "1" ? "selected" : "")}>未付</option>" +
                                 "</select>" +
-                        "</div>";
-                    SqlComm = $"SELECT * FROM WP_Provider ORDER BY pvId";
-                    DataTable pvTbl = getTbl.table("WP", SqlComm);
-                    Label2.Text += "<div class='search-sub'>" +
-                        "<span class='input-title'>廠　　商</span>" +
-                        "<select id='pvSn' class='form-control'>" +
-                            "<option value=''>全部</option>";
-                    foreach (DataRow row in pvTbl.Rows)
-                    {
-                        Label2.Text += $"<option value='{row["sn"]}' {(pvSn == row["sn"].ToString() ? "selected" : "")}>{row["pvId"]}-{row["pvName"]}</option>";
-                    }
-                    Label2.Text += "</select>" +
-                "</div>" +
-                "<div class='page-submit'><span id='processing' style='margin-left:10px;color:#080;'><img src='/images/loadingPix.gif' style='width:28px;margin-right:5px;'>處理中，請稍待！</span><button class='btn-submit' id='btn-search'><i class='fas fa-search'></i> 查詢</button></div>" +
+                        "</div>" +
+                        "<div class='page-submit'><span id='processing' style='margin-left:10px;color:#080;'><img src='/images/loadingPix.gif' style='width:28px;margin-right:5px;'>處理中，請稍待！</span><button class='btn-submit' id='btn-search'><i class='fas fa-search'></i> 查詢</button></div>" +
                     "</div>";
 
                     Label2.Text += "<div class='rptr-main'>" +
@@ -117,7 +101,7 @@ public partial class prg7008 : System.Web.UI.Page
                         "</div>" +
                         "<table class='list-main' style='border-spacing:1px;'>" +
                             "<tr class='list-title'>" +
-                            "<td class='align-l'>進貨單號</td><td class='align-l'>進貨日期</td><td class='align-l'>廠商代號</td><td class='align-l'>廠商名稱</td><td>應付金額</td><td>已結金額</td><td>未結金額</td>" +
+                                        "<td class='align-l'>進貨單號</td><td class='align-l'>進貨日期</td><td class='align-l'>廠商代號</td><td class='align-l'>廠商名稱</td><td>應付金額</td><td>已結金額</td><td>未結金額</td>" +
                             "</tr>";
                     if (inStkTbl.Rows.Count == 0)
                     {
@@ -169,8 +153,24 @@ public partial class prg7008 : System.Web.UI.Page
                             $"<td class='amt_p_total'></td>" +
                             $"<td class='qty_m_total'></td>" +
                         "</tr>";
-                    }
+                        }
+                    SqlComm = $"SELECT sum(amtTotal) as Total, sum(qty) as qtyTotal,pNameS FROM WP_vInStock WHERE pNameS like'酒瓶' AND InStkDate BETWEEN '{sDate}' AND '{eDate} 23:59:59'group by pNameS";
+                    DataTable w = getTbl.table ("WP", SqlComm);
+                    DataRow[] wRows;
+                    wRows = w.Select ();
+                    string qtyTotal = ""; double total = 0;
+                    foreach (DataRow row in w.Rows)
+                        {
+                        string pNameS = row["pNameS"].ToString ();
+                        qtyTotal = row["qtyTotal"].ToString () == "" ? "0" : row["qtyTotal"].ToString ();
+                        total = Convert.ToDouble (row["Total"]);
+                        // 現在你可以使用 'pNameS' 和 'total' 變數進行後續的操作
+                        // 例如，將它們添加到你的 Label2.Text 中
+                        }
+                    qtyTotal = string.IsNullOrEmpty (qtyTotal) ? "0" : qtyTotal;
                     Label2.Text += "</table>" +
+                         //$"<div class='stamp' style='margin-top:50px;'>'{}'"+
+                         $"酒瓶退貨數：{qtyTotal}, 總計：{total:#0.00}<br>"+
                     "<div class='stamp' style='margin-top:50px;'><span>主辦︰　　　主任︰　　　會計︰　　　秘書︰　　　</div>" +
                     $"<input type='hidden' id='page-total' value='{pageNo}' />" +
                 "</div>" +

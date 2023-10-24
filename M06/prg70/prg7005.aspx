@@ -74,6 +74,7 @@
                     : amtTotal;
                 $obj.find("." + value + "_total").attr("data-val", amtTotal).text(to3dot(amtTotal));
 
+
                 //總利潤率%
                 var oAmt_total = parseInt($obj.find(".oAmt_total").attr("data-val")),
                     oProfit_total = parseInt($obj.find(".oProfit_total").attr("data-val"));
@@ -81,7 +82,10 @@
                 var pFitPercent_total = oAmt_total == 0 ? 0 : (oProfit_total / oAmt_total * 100);
                 pFitPercent_total = roundToPoint(pFitPercent_total, pointQty);
                 $obj.find(".pFitPercent_total").attr("data-val", pFitPercent_total).text(to3dot(pFitPercent_total));
+                console.log(amtTotal);
+                console.log(pFitPercent_total);
             });
+           
         }
 
         function SetCookies() {

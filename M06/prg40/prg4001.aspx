@@ -454,13 +454,16 @@
                                 label: item.pBarcode + "．" + item.pNameS, // 下拉項顯示內容
                                 value: item.pBarcode + "．" + item.pNameS,  // 下拉項對應數值
                                 actPno: item.pNo,
-                                qtyNow: item.qtyNow
+                                qtyNow: item.qtyNow,
+                                type: item.isUpdStk
+
                                 //另外可以自定義其它引數
                             }
                         }));
                     },
                     select: function (event, ui) { //event引數是事件物件，ui物件只有一個item屬性，對應資料來源中被選中的物件
-                        if (parseInt(ui.item.qtyNow) <= 0) {
+                        var back = $("#back-inStk").prop("checked");
+						if (parseInt(ui.item.qtyNow) <= 0 && (ui.item.type) == "Y" && !back) {
                             alert("目前該商品無庫存，無法銷貨！");
                             $("#pd-filter").val("");
                             $("#act-pNo").val("");

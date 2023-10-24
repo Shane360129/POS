@@ -170,7 +170,7 @@
                                             isTax = $"{row["isTax"]}" == "Y" ? "Y" : isTax;   //整張銷貨單商品都免稅才免稅
                                             pdAmtNoneTax = $"{row["isTax"]}" == "N" ? pdAmt : toDouble.Numer(pdAmt * (1 - Global.TaxPercent), Global.pointQty);  //商品未稅單價(免稅品的未稅單價=銷貨價)
                                             amtNoneTax += pdAmtNoneTax * (pdQty);     //銷貨單未稅總額
-                                            pdAmtTotal = pdAmt * (pdQty);       //商品小計
+                                            pdAmtTotal = int.Parse($"{pd["amtTotal"]}");       //商品小計
                                             amtTotal += pdAmtTotal;       //銷貨單總額
                                             if ($"{pd["dtlSn"]}" == "new")
                                             {
@@ -223,7 +223,7 @@
                                     OutStkId = $"{outStkTbl.Rows[0]["OutStkId"]}";
                                     foreach (DataRow pd in outStkTbl.Rows)     //處理銷貨單每樣商品
                                     {
-                                        SqlComm = $"UPDATE WP_Product SET qtyNow=qtyNow+({pd["qty"]}) WHERE pNo='{pd["pNo"]}'";    //更新商品數量
+                                        SqlComm = $"UPDATE WP_Product SET qtyNow=qtyNow+({pd["qty"]}) WHERE pNo='{pd["pNo"]}' and isUpdStock='Y'";    //更新商品數量
                                         Global.getTbl.updTbl("WP", SqlComm);
                                     }
 

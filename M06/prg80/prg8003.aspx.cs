@@ -11,38 +11,39 @@ using System.Web.UI.WebControls;
 using static Global;
 
 public partial class prg8003 : System.Web.UI.Page
-{
-    protected void Page_Load(object sender, EventArgs e)
     {
-        Employee emp = new Employee();
-        ToDouble toDouble = new ToDouble();
-        if (!emp.IsEmp) { Response.Redirect("/Login.aspx"); }
-        else
+    protected void Page_Load(object sender, EventArgs e)
         {
-            string PrgId = "8003";
-            if (!emp.ChkPrg(PrgId)) { Response.Redirect("/index.aspx"); }
-            else
+        Employee emp = new Employee ();
+        ToDouble toDouble = new ToDouble ();
+        if (!emp.IsEmp) { Response.Redirect ("/Login.aspx"); }
+        else
             {
+            TableName ();
+            string PrgId = "8003";
+            if (!emp.ChkPrg (PrgId)) { Response.Redirect ("/index.aspx"); }
+            else
+                {
                 DataRow prgRow0 = emp.PrgTbl.Rows[0];
                 Label1.Text = $"<input type='hidden' id='is-admin' value='{emp.EmpIsAdmin}' />" +
                 $"<div class='prg-title'><i class='fas fa-map-marker-alt'></i> {prgRow0["prgId"]} {prgRow0["prgName"]}</div>" +
                 $"<input type='hidden' id='pointQty' value='{pointQty}' />";
-                string pointRule = $"#0.{string.Concat(Enumerable.Repeat("0", pointQty))}";
+                string pointRule = $"#0.{string.Concat (Enumerable.Repeat ("0", pointQty))}";
 
                 string SqlComm, sYMD, uYMD,
-                    sDate = WebUtility.UrlDecode(cookies.Read("sDate")),
-                    eDate = WebUtility.UrlDecode(cookies.Read("eDate"));
+                    sDate = WebUtility.UrlDecode (cookies.Read ("sDate")),
+                    eDate = WebUtility.UrlDecode (cookies.Read ("eDate"));
 
                 SqlComm = $"SELECT * FROM WP_ChkoutYM WHERE isDel='N' ORDER BY YearMonth DESC";      //已結帳日期
-                DataTable chkoutYMTbl = getTbl.table("WP", SqlComm);
+                DataTable chkoutYMTbl = getTbl.table ("WP", SqlComm);
 
                 if (chkoutYMTbl.Rows.Count == 0)
                     sYMD = StartYM;
                 else
-                {
+                    {
                     uYMD = $"{chkoutYMTbl.Rows[0]["YearMonth"]}";
-                    sYMD = DateTime.Parse($"{uYMD.Substring(0, 4)}-{uYMD.Substring(4, 2)}-{uYMD.Substring(6, 2)}").AddDays(1).ToString("yyyyMMdd");
-                }
+                    sYMD = DateTime.Parse ($"{uYMD.Substring (0, 4)}-{uYMD.Substring (4, 2)}-{uYMD.Substring (6, 2)}").AddDays (1).ToString ("yyyyMMdd");
+                    }
 
                 Label2.Text = $"<input type='hidden' id='sYMD' value='{sYMD}'>" +
                 $"<input type='hidden' id='StartYM' value='{StartYM}' />" +
@@ -90,155 +91,133 @@ public partial class prg8003 : System.Web.UI.Page
                 "</div>";
 
                 if (sDate != "" && eDate != "")
-                {
+                    {
                     SqlComm = $"SELECT * FROM WP_vStkUpd WHERE isDel='N' AND (stkDate BETWEEN '{sDate}' AND '{eDate}') " +
                        $"ORDER BY stkDate DESC, timeUpdate, pNo";
-                    DataTable updTbl = getTbl.table("WP", SqlComm);
-
-                    //調整前數量
-                    SqlComm = $"SELECT * FROM WP_vInStock WHERE isDel='N' AND (InStkDate BETWEEN '{sDate}' AND '{eDate}') and pvSn = '-1' " +
-                        $"ORDER BY InStkId, pNo";
-                    DataTable InTbl = getTbl.table("WP", SqlComm);
-                    SqlComm = $"SELECT * FROM WP_vOutStock WHERE isDel='N' AND (OutStkDate BETWEEN '{sDate}' AND '{eDate}') and memSn = '-1' " +
-                        $"ORDER BY OutStkId, pNo";
-                    DataTable outTbl = getTbl.table("WP", SqlComm);
-
-
-                    Label2.Text += "<div id='rptr-main'>" +
-                        "<div class='rptr-title'>貨品倉庫庫存報表</div>" +
-                        "<div class='rptr-data'>" +
-                            $"<div><div style='float:left;'>日期區間︰{sDate} 至 {eDate}</div></div>" +
-                            $"<div style='clear:both;text-align:right;width:100%;'>列印日期︰{DateTime.Today.ToString("yyyy/MM/dd")}</div>" +
-                        "</div>" +
-
-                        "<table class='list-main inStk-list-main' style='border-spacing:1px;margin-top:20px;'>" +
-                        "<tr class='list-title'><td>調整日期</td><td>商品條碼</td><td>商品簡稱</td><td style='text-align:right'>調整前數量</td><td style='text-align:right'>調整後數量</td><td style='text-align:right'>調整後成本</td></tr>";
-
+                    DataTable updTbl = getTbl.table ("WP", SqlComm);
+                    Label2.Text += "<table class='list-main inStk-list-main' style='border-spacing:1px;margin-top:20px;'>" +
+                        "<tr class='list-title'><td>調整日期</td><td>商品條碼</td><td>商品簡稱</td><td style='text-align:right'>調整數量</td><td style='text-align:right'>成本</td><td style='text-align:right'>調整總成本</td></tr>";
                     if (updTbl.Rows.Count == 0)
-                        Label2.Text += "<tr><td colspan='5' class='empty-data'><i class='fas fa-exclamation-circle'></i> 查無庫存調整資料！</td></tr>";
-                    else
-                    {
-                        TableName();
-                        DataRow[] istkRows, ostkRows;
-                        int INqty, OUTqty, qty;
-                        foreach (DataRow row in updTbl.Rows)
                         {
-                            istkRows = InTbl.Select($"pNo='{row["pNo"]}'");
-                            ostkRows = outTbl.Select($"pNo='{row["pNo"]}'");
-                            INqty = 0;
-                            if (istkRows.Length > 0)
+                        Label2.Text += "<tr><td colspan='5' class='empty-data'><i class='fas fa-exclamation-circle'></i> 查無庫存調整資料！</td></tr>";
+                        }
+                    else
+                        {
+                        string date, pb, name, difqty;
+                        double cost, costtotal = 0;
+                        foreach (DataRow row in updTbl.Rows)
                             {
-                                for (int i = 0; i < istkRows.Length; i++)
-                                {
-                                    INqty += int.Parse(istkRows[i]["qty"].ToString());
-                                }
-                            }
-                            OUTqty = 0;
-                            if (ostkRows.Length > 0)
-                            {
-                                for (int i = 0; i < ostkRows.Length; i++)
-                                {
-                                    OUTqty += int.Parse(ostkRows[i]["qty"].ToString());
-                                }
-                            }
-                            qty = int.Parse(row["qty"].ToString()) - INqty + OUTqty;
+                            costtotal = double.Parse (row["qtyDiff"].ToString ()) * double.Parse (row["cost"].ToString ());
+                            date = row["stkDate"].ToString ();
+                            pb = (row["pBarcode"].ToString () == "" ? row["pCode"].ToString () : row["pBarcode"].ToString ());
+                            name = row["pNameS"].ToString ();
+                            difqty = row["qtydiff"].ToString ();
+                            cost = toDouble.Numer (double.Parse (row["cost"].ToString ()), pointQty);
 
-                            Label2.Text += "<tr>" +
-                                    $"<td>{row["stkDate"]:yyyy/MM/dd}</td>" +
-                                    $"<td>{(row["pBarcode"].ToString() == "" ? row["pCode"].ToString() : row["pBarcode"].ToString())}</td>" +
-                                    $"<td>{row["pNameS"]}</td>" +
-                                    $"<td style='text-align:right;'>{qty}</td>" +
-                                    $"<td style='text-align:right;'>{row["qty"]}</td>" +
-                                    $"<td style='text-align:right;'>{row["cost"]}</td>" +
-                                "</tr>";
-                            Input($"{row["stkDate"]:yyyy/MM/dd}","'" + $"{(row["pBarcode"].ToString() == "" ? row["pCode"].ToString() : row["pBarcode"].ToString())}",
-                                $"{row["pNameS"]}", $"{qty}",$"{row["qty"]}",$"{row["cost"]}");
+                            Label2.Text += "<tr class='tr-row'>" +
+                                $"<td>{row["stkDate"]:yyyy/MM/dd}</td>" +
+                                $"<td>{(row["pBarcode"].ToString () == "" ? row["pCode"].ToString () : row["pBarcode"].ToString ())}</td>" +
+                                $"<td>{row["pNameS"]}</td>" +
+                                $"<td style='text-align:right;'>{row["qtydiff"]}</td>" +
+                                $"<td style='text-align:right;'>{toDouble.Numer (double.Parse (row["cost"].ToString ()), pointQty)}</td>" +
+                                $"<td style='text-align:right;' class='cost' data-val='{costtotal}'>{costtotal}</td>" +
+                            "</tr>";
+
+                            Input (date, pb, name, difqty, cost.ToString (), costtotal.ToString ());
+                            }
+
+                        Label2.Text += "<tr class='total-row'>" +
+                       "<td colspan='5'>合計</td>" +
+                        $"<td id='costTotal' style='text-align:right;'></td>" +
+                     "</tr>";
                         }
                     }
-                    Label2.Text += "</table></div>" +
-                        "<div class='align-r' style='margin-top:15px;'><button id='btn-prn' style='color:#080;font-weight:bold;'>列印進銷存月報</button>" +
-                        "<input type = 'button' value = 'Excel下載' style='color:#080' onclick='DownloadFile()' />" +
-                        "</div>";
+                Label2.Text += "</table>" +
+                "<div class='align-r' style='margin-top:15px;'>" +
+                //<button id='btn-prn' style='color:#080;font-weight:bold;'>列印進銷存月報</button>" +
+                "<input type = 'button' value = 'Excel下載' style='color:#080' onclick='DownloadFile()' />" +
+                "</div>";
                 }
             }
         }
-    }
+    
     public static List<Lable_8003> dataList;
     #region 欄位設定
     public class Lable_8003
-    {
-        public string Date { get; set; } //調整日期	
-        public string Bcode { get; set; } //商品條碼	
-        public string Name { get; set; } //商品簡稱	
-        public string LastQty { get; set; } //調整前數量	
-        public string NowQry { get; set; } //調整後數量	
-        public string Cost { get; set; } //調整後成本
+        {
+        public string Date { get; set; } //日期
+        public string Pb { get; set; } //商品條碼
+        public string Name { get; set; } //商品簡稱
+        public string Difqty { get; set; } //調整數量	
+        public string Cost { get; set; } //成本
+        public string Costtotal { get; set; } //調整總成本
     }
     #endregion
     #region 欄位表頭設定
     public void TableName()
-    {
-        dataList = new List<Lable_8003>();
-        dataList.Add(new Lable_8003()
         {
-            Date = "調整日期",
-            Bcode = "商品條碼",
+        dataList = new List<Lable_8003> ();
+        dataList.Add (new Lable_8003 ()
+            {
+            Date = "日期",
+            Pb = "商品條碼",
             Name = "商品簡稱",
-            LastQty = "調整前數量",
-            NowQry = "調整後數量",
-            Cost = "調整後成本"
-        });
-    }
+            Difqty = "調整數量",
+            Cost = "成本",
+            Costtotal = "調整總成本",
+            });
+        }
     #endregion
     #region 欄位表身寫入
-    public void Input(string d, string b, string na, string lq, string nq, string c)
-    {
-        dataList.Add(new Lable_8003()
+    public void Input(string date, string pb, string name, string difqty, string cost, string costtotal)
         {
-            Date = d,
-            Bcode = b,
-            Name = na,
-            LastQty = lq,
-            NowQry = nq,
-            Cost = c,
-        });
-    }
+        dataList.Add (new Lable_8003 ()
+            {
+            Date = date,
+            Pb = pb,
+            Name = name,
+            Difqty = difqty,
+            Cost = cost,
+            Costtotal = costtotal     
+            });
+        }
     #endregion
     #region 存為Excel檔
     [System.Web.Services.WebMethod]
     public static string SaveExcel()
-    {
+        {
         // 建立活頁簿
-        IXLWorkbook workbook = new XLWorkbook();
+        IXLWorkbook workbook = new XLWorkbook ();
 
-        var WorksheetsName = " 8003庫存調整";
-        var datatime = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var WorksheetsName = "8003庫存調整報表";
+        var datatime = DateTime.Now.ToString ("yyyyMMdd_HHmmss");
 
         // 建立工作表
-        IXLWorksheet worksheet = workbook.Worksheets.Add(WorksheetsName);
+        IXLWorksheet worksheet = workbook.Worksheets.Add (WorksheetsName);
 
         for (int j = 1; j <= dataList.Count; j++)
-        {
-            worksheet.Cell(j, 1).Value = dataList[j - 1].Date;
-            worksheet.Cell(j, 2).Value = dataList[j - 1].Bcode;
-            worksheet.Cell(j, 3).Value = dataList[j - 1].Name;
-            worksheet.Cell(j, 4).Value = dataList[j - 1].LastQty;
-            worksheet.Cell(j, 5).Value = dataList[j - 1].NowQry;
-            worksheet.Cell(j, 6).Value = dataList[j - 1].Cost;
-        }
-        worksheet.Columns().AdjustToContents();//自動調整欄位寬度
+            {
+            worksheet.Cell (j, 1).Value = dataList[j - 1].Date;
+            worksheet.Cell (j, 2).Style.NumberFormat.Format = "@"; //單元格測試
+            worksheet.Cell (j, 2).Value = dataList[j - 1].Pb;
+            worksheet.Cell (j, 3).Value = dataList[j - 1].Name;
+            worksheet.Cell (j, 4).Value = dataList[j - 1].Difqty;
+            worksheet.Cell (j, 5).Value = dataList[j - 1].Cost;
+            worksheet.Cell (j, 6).Value = dataList[j - 1].Costtotal;
+            }
+        worksheet.Columns ().AdjustToContents ();//自動調整欄位寬度
 
         var fileName = WorksheetsName + ".xlsx";//儲存名稱
 
-        var pathdownload = HttpContext.Current.Request.MapPath("~/Files/");
+        var pathdownload = HttpContext.Current.Request.MapPath ("~/Files/");
         //儲存
-        workbook.SaveAs(pathdownload + fileName);
+        workbook.SaveAs (pathdownload + fileName);
         //return pathdownload + fileName;
         //Read the File as Byte Array.
-        byte[] bytes = File.ReadAllBytes(pathdownload + fileName);
+        byte[] bytes = File.ReadAllBytes (pathdownload + fileName);
 
         //Convert File to Base64 string and send to Client.
-        return Convert.ToBase64String(bytes, 0, bytes.Length);
-    }
+        return Convert.ToBase64String (bytes, 0, bytes.Length);
+        }
     #endregion
-}
+    }

@@ -22,7 +22,7 @@ public class Global
         TaxPercent = 0.05;
 
     public static int
-        pointQty = 4;
+        pointQty = 2;
 }
 
 

@@ -94,6 +94,21 @@
             });
         }
 
+        function CalcTotal() {
+
+            var cost;
+            var costTotal = 0;
+            var $this;
+            $(".tr-row").each(function () {
+                $this = $(this);
+                cost = parseFloat($this.find(".cost").attr("data-val"));
+                costTotal += cost;
+            });
+            console.log(costTotal);
+            $("#costTotal").text(to3dot(roundToPoint(costTotal, pointQty)));
+        }
+        
+
         function chkFinish(_$obj) {
             if (noneEmptyObj(_$obj)) {
                 return $("#act-pNo").val() == "" ? error_focus("商品沒有正確選擇！", $("#pd-filter")) : true;
@@ -106,6 +121,7 @@
         function Initial() {
             getJson("pdJson", "IO");
             $("#processing").hide();
+            CalcTotal();
         }
 
         $(function () {
@@ -152,15 +168,6 @@
             $(".btn-abort").click(function () {
                 $("#btn-add").show();
                 $("#add-main").hide().find("input").val("");
-            });
-
-            $("#btn-prn").click(function () {
-                $("#rptr-main").printThis(
-                    {
-                        printContainer: true,
-                        importCSS: true,
-                        loadCSS: "../ext/css/7001print.css"
-                    });
             });
 
             $("#btn-add-submit").click(function () {
@@ -242,45 +249,46 @@
                 });
         });
     </script>
-        <script type="text/javascript">
-            function DownloadFile() {
-                $.ajax({
-                    type: "POST",
-                    url: "prg8003.aspx/SaveExcel",
-                    data: "",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    success: function (r) {
-                        //Convert Base64 string to Byte Array.
-                        var bytes = Base64ToBytes(r.d);
 
-                        //Convert Byte Array to BLOB.
-                        var blob = new Blob([bytes], { type: "application/octetstream" });
+    <script type="text/javascript">
+        function DownloadFile() {
+            $.ajax({
+                type: "POST",
+                url: "prg8003.aspx/SaveExcel",
+                data: "",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (r) {
+                    //Convert Base64 string to Byte Array.
+                    var bytes = Base64ToBytes(r.d);
 
-                        //Check the Browser type and download the File.
-                        var isIE = false || !!document.documentMode;
-                        if (isIE) {
-                            window.navigator.msSaveBlob(blob, "8003庫存調整.xlsx");
-                        } else {
-                            var url = window.URL || window.webkitURL;
-                            link = url.createObjectURL(blob);
-                            var a = $("<a />");
-                            a.attr("download", "8003庫存調整.xlsx");
-                            a.attr("href", link);
-                            $("body").append(a);
-                            a[0].click();
-                            $("body").remove(a);
-                        }
+                    //Convert Byte Array to BLOB.
+                    var blob = new Blob([bytes], { type: "application/octetstream" });
+
+                    //Check the Browser type and download the File.
+                    var isIE = false || !!document.documentMode;
+                    if (isIE) {
+                        window.navigator.msSaveBlob(blob, "庫存調整報表.xlsx");
+                    } else {
+                        var url = window.URL || window.webkitURL;
+                        link = url.createObjectURL(blob);
+                        var a = $("<a />");
+                        a.attr("download", "庫存調整報表.xlsx");
+                        a.attr("href", link);
+                        $("body").append(a);
+                        a[0].click();
+                        $("body").remove(a);
                     }
-                });
-            };
-            function Base64ToBytes(base64) {
-                var s = window.atob(base64);
-                var bytes = new Uint8Array(s.length);
-                for (var i = 0; i < s.length; i++) {
-                    bytes[i] = s.charCodeAt(i);
                 }
-                return bytes;
-            };
-        </script>
+            });
+        };
+        function Base64ToBytes(base64) {
+            var s = window.atob(base64);
+            var bytes = new Uint8Array(s.length);
+            for (var i = 0; i < s.length; i++) {
+                bytes[i] = s.charCodeAt(i);
+            }
+            return bytes;
+        };
+    </script>
 </asp:Content>

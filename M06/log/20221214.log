@@ -1,0 +1,36 @@
+INFO  2022/12/14 10:58:21 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:21 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 10:58:21 WebService           GetProduct           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:21 WebService           GetProduct           取得商品資料:SELECT * FROM WP_vProductPos WHERE isSale in('0','1')
+INFO  2022/12/14 10:58:22 WebService           GetMember            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:22 WebService           GetMember            取得會員資料:SELECT * FROM WP_Member WHERE isStop='N'
+INFO  2022/12/14 10:58:22 WebService           GetEmployee          來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:22 WebService           GetEmployee          取得員工資料:SELECT * FROM WP_Employee WHERE isStop='N'
+INFO  2022/12/14 10:58:22 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:22 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 10:58:22 WebService           GetPayKind           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 10:58:22 WebService           GetPayKind           取得付款別資料:SELECT * FROM WP_PayKind WHERE isDel='N' AND PayKId not in('01','02','03','04','05')  
+INFO  2022/12/14 15:10:04 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:05 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 15:10:05 WebService           GetProduct           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:05 WebService           GetProduct           取得商品資料:SELECT * FROM WP_vProductPos WHERE isSale in('0','1')
+INFO  2022/12/14 15:10:05 WebService           GetMember            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:05 WebService           GetMember            取得會員資料:SELECT * FROM WP_Member WHERE isStop='N'
+INFO  2022/12/14 15:10:05 WebService           GetEmployee          來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:05 WebService           GetEmployee          取得員工資料:SELECT * FROM WP_Employee WHERE isStop='N'
+INFO  2022/12/14 15:10:06 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:06 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 15:10:06 WebService           GetPayKind           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:06 WebService           GetPayKind           取得付款別資料:SELECT * FROM WP_PayKind WHERE isDel='N' AND PayKId not in('01','02','03','04','05')  
+INFO  2022/12/14 15:10:18 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:18 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 15:10:18 WebService           GetProduct           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:18 WebService           GetProduct           取得商品資料:SELECT * FROM WP_vProductPos WHERE isSale in('0','1')
+INFO  2022/12/14 15:10:18 WebService           GetMember            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:18 WebService           GetMember            取得會員資料:SELECT * FROM WP_Member WHERE isStop='N'
+INFO  2022/12/14 15:10:19 WebService           GetEmployee          來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:19 WebService           GetEmployee          取得員工資料:SELECT * FROM WP_Employee WHERE isStop='N'
+INFO  2022/12/14 15:10:19 WebService           GetPdKind            來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:19 WebService           GetPdKind            取得商品類別:SELECT * FROM WP_vPdKindPos
+INFO  2022/12/14 15:10:19 WebService           GetPayKind           來源:172.16.10.6 172.16.10.6 0001
+INFO  2022/12/14 15:10:19 WebService           GetPayKind           取得付款別資料:SELECT * FROM WP_PayKind WHERE isDel='N' AND PayKId not in('01','02','03','04','05')  

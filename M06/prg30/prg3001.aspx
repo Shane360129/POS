@@ -129,7 +129,7 @@
             dateFormat: 'yy/mm/dd',
             changeYear: true,
             changeMonth: true,
-            yearRange: "-100:+1",
+            yearRange: "-100:+0",
             minDate: new Date($("#minDate").val().substr(0, 4), $("#minDate").val().substr(4, 2) - 1, $("#minDate").val().substr(6, 2))
         });
 
