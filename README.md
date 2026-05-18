@@ -2,9 +2,11 @@
 
 由原 M06 ASP.NET WebForms 進銷存後台改寫為可獨立 demo 的純前端網站。
 **保留同一套模組架構**（主檔 / 進貨 / 銷售 / 庫存 / 應收應付 / 報表 / 設定），
-**全面替換**品牌、UI/UX 與商業邏輯。
+**全面替換**品牌、UI/UX 與商業邏輯。原 .NET 專案已歸檔到 `legacy/` 供參考。
 
 ## 啟動方式
+
+### 本機開發
 
 直接以靜態伺服器服務本資料夾，例如：
 
@@ -19,6 +21,14 @@ npx http-server . -p 8000
 3 付款、4 收款的示範資料。
 
 進入 `index.html` 為產品介紹頁，點「啟動 Demo」進入 `app.html`。
+
+### 部署到 GitHub Pages
+
+repo → Settings → Pages：
+- Source：`Deploy from a branch`
+- Branch：`master` / `(root)` → 儲存
+
+部署後網址：`https://<user>.github.io/POS/`
 
 ## 模組對應（原 → 新）
 
@@ -68,14 +78,15 @@ COGS = qty × current_avg
 ## 檔案結構
 
 ```
-demo/
+.
 ├── index.html              # 產品介紹 / Landing
 ├── app.html                # 主應用 (SPA shell)
-└── assets/
-    ├── css/style.css       # 設計系統 + 全部樣式
-    └── js/
-        ├── data.js         # 資料層 (localStorage) + 範例資料種子
-        ├── accounting.js   # 商業邏輯 (WAC + 會計分錄)
-        ├── views.js        # 各模組畫面渲染
-        └── app.js          # SPA 路由 + 應用啟動
+├── assets/
+│   ├── css/style.css       # 設計系統 + 全部樣式
+│   └── js/
+│       ├── data.js         # 資料層 (localStorage) + 範例資料種子
+│       ├── accounting.js   # 商業邏輯 (WAC + 會計分錄)
+│       ├── views.js        # 各模組畫面渲染
+│       └── app.js          # SPA 路由 + 應用啟動
+└── legacy/                 # 原 M06 ASP.NET WebForms 專案（已封存，僅供參考）
 ```
