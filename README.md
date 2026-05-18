@@ -1,10 +1,15 @@
-# InvenFlow — 智慧進銷存與會計管理平台 (Demo)
+# InvenFlow — 智慧進銷存與會計管理平台
 
-由原 M06 ASP.NET WebForms 進銷存後台改寫為可獨立 demo 的純前端網站。
-**保留同一套模組架構**（主檔 / 進貨 / 銷售 / 庫存 / 應收應付 / 報表 / 設定），
-**全面替換**品牌、UI/UX 與商業邏輯。原 .NET 專案已歸檔到 `legacy/` 供參考。
+兩種跑法，同一套模組架構（主檔 / 進貨 / 銷售 / 庫存 / 應收應付 / 報表 / 設定）：
 
-## 啟動方式
+| 版本 | 位置 | 後端 | 用途 |
+| --- | --- | --- | --- |
+| **靜態 demo** | 根目錄 | 無（瀏覽器 `localStorage`）| 部署 GitHub Pages 直接體驗 |
+| **Full-stack** | [`server/`](./server/) | ASP.NET Core 8 + EF Core + SQL Server | 真實後端、可開發延伸 |
+
+原 M06 ASP.NET WebForms 進銷存後台已歸檔到 `legacy/` 供參考。
+
+## 靜態 demo 啟動方式
 
 ### 本機開發
 
@@ -29,6 +34,27 @@ repo → Settings → Pages：
 - Branch：`master` / `(root)` → 儲存
 
 部署後網址：`https://<user>.github.io/POS/`
+
+## Full-stack 版啟動
+
+完整 ASP.NET Core 8 + SQL Server 後端在 [`server/`](./server/)，docker compose 一鍵起：
+
+```bash
+cd server
+docker compose up -d        # 起 SQL Server + API
+open http://localhost:5080  # Admin Console
+# http://localhost:5080/swagger     ← Swagger API 文件
+```
+
+不想裝 docker / SQL Server 也可用 SQLite 模式：
+```bash
+cd server/InvenFlow.Api
+InvenFlow__UseSqlite=true \
+  ConnectionStrings__DefaultConnection="Data Source=invenflow.db" \
+  dotnet run
+```
+
+詳細 API 表、entity 關聯、商業邏輯說明見 [`server/README.md`](./server/README.md)。
 
 ## 模組對應（原 → 新）
 
@@ -79,14 +105,21 @@ COGS = qty × current_avg
 
 ```
 .
-├── index.html              # 產品介紹 / Landing
-├── app.html                # 主應用 (SPA shell)
+├── index.html              # 產品介紹 / Landing（靜態 demo）
+├── app.html                # 主應用 SPA shell（靜態 demo）
 ├── assets/
-│   ├── css/style.css       # 設計系統 + 全部樣式
-│   └── js/
-│       ├── data.js         # 資料層 (localStorage) + 範例資料種子
-│       ├── accounting.js   # 商業邏輯 (WAC + 會計分錄)
-│       ├── views.js        # 各模組畫面渲染
-│       └── app.js          # SPA 路由 + 應用啟動
-└── legacy/                 # 原 M06 ASP.NET WebForms 專案（已封存，僅供參考）
+│   ├── css/style.css
+│   └── js/{data,accounting,views,app}.js
+├── server/                 # Full-stack 版（ASP.NET Core + SQL Server）
+│   ├── InvenFlow.Api/
+│   │   ├── Models/         # entity
+│   │   ├── Data/           # DbContext + Seed
+│   │   ├── Services/       # AccountingService (WAC) + ReportService
+│   │   ├── Controllers/
+│   │   ├── Dtos/
+│   │   ├── wwwroot/        # admin console（fetch API 版前端）
+│   │   └── Program.cs
+│   ├── docker-compose.yml  # SQL Server + API
+│   └── README.md
+└── legacy/                 # 原 M06 ASP.NET WebForms 專案（封存）
 ```
