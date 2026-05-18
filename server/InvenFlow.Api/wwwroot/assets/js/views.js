@@ -5,6 +5,50 @@
 
 const Views = {};
 
+/* ---------- shared helpers ---------- */
+
+function searchableTable({ rows, columns, filterKeys, renderActions, emptyText = "目前沒有資料" }) {
+  const wrap = el("div");
+  const search = input({ placeholder: "搜尋…", style: "width: 220px;" });
+  wrap.appendChild(el("div", { style: "display:flex; justify-content:flex-end; margin-bottom:10px;" }, [search]));
+
+  const table = el("table", { class: "data" });
+  table.innerHTML = `<thead><tr>${columns.map(c => `<th class="${c.num ? 'num' : ''}">${c.label}</th>`).join("")}${renderActions ? "<th></th>" : ""}</tr></thead>`;
+  const tbody = el("tbody");
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+
+  const empty = el("div", { class: "empty", text: emptyText });
+
+  const render = (filter = "") => {
+    tbody.innerHTML = "";
+    const q = filter.trim().toLowerCase();
+    const visible = !q ? rows : rows.filter(r => filterKeys.some(k => String(r[k] ?? "").toLowerCase().includes(q)));
+    if (!visible.length) {
+      tbody.appendChild(el("tr", { html: `<td colspan="${columns.length + (renderActions ? 1 : 0)}" style="text-align:center;color:#9aa0c1;padding:24px;">${q ? "找不到符合條件的資料" : emptyText}</td>` }));
+      return;
+    }
+    visible.forEach(r => {
+      const tr = el("tr");
+      tr.innerHTML = columns.map(c => `<td class="${c.num ? 'num' : ''}">${c.format ? c.format(r[c.key], r) : (r[c.key] ?? "")}</td>`).join("");
+      if (renderActions) {
+        const td = el("td", { style: "text-align:right; white-space:nowrap;" });
+        renderActions(td, r);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+  };
+  search.oninput = () => render(search.value);
+  render();
+  return wrap;
+}
+
+async function tryDelete(label, fn) {
+  try { await fn(); toast(`已刪除${label}`, "ok"); router.refresh(); }
+  catch (e) { toast(e.message || "刪除失敗", "err"); }
+}
+
 /* ------------------------------------------------------------ */
 /* Dashboard */
 /* ------------------------------------------------------------ */
@@ -69,33 +113,28 @@ Views.products = async () => {
   root.appendChild(el("p", { class: "page-sub", text: `共 ${rows.length} 項商品。WAC 平均成本由後端維護。` }));
 
   const card = el("div", { class: "card" });
-  const head = el("div", { class: "card-h" }, [el("h3", { text: "商品列表" }),
-    el("button", { class: "btn btn-primary", text: "+ 新增商品", onclick: () => editProduct(null) })]);
-  card.appendChild(head);
+  card.appendChild(el("div", { class: "card-h" }, [el("h3", { text: "商品列表" }),
+    el("button", { class: "btn btn-primary", text: "+ 新增商品", onclick: () => editProduct(null) })]));
 
-  const table = el("table", { class: "data" });
-  table.innerHTML = `<thead><tr>
-    <th>編號</th><th>商品名稱</th><th>類別</th><th class="num">售價</th>
-    <th class="num">平均成本</th><th class="num">庫存</th><th class="num">安全庫存</th><th></th>
-  </tr></thead>`;
-  const tbody = el("tbody");
-  rows.forEach(p => {
-    const tr = el("tr");
-    tr.innerHTML = `
-      <td>${p.code}</td>
-      <td>${p.name}</td>
-      <td>${p.category || ""}</td>
-      <td class="num">${fmtMoney(p.price)}</td>
-      <td class="num">${fmtMoney(p.avgCost)}</td>
-      <td class="num">${fmtNumber(p.stock)}</td>
-      <td class="num">${fmtNumber(p.safetyStock)}</td>
-      <td></td>`;
-    const td = tr.lastElementChild;
-    td.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "編輯", onclick: () => editProduct(p) }));
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  card.appendChild(table);
+  card.appendChild(searchableTable({
+    rows,
+    columns: [
+      { key: "code", label: "編號" },
+      { key: "name", label: "商品名稱" },
+      { key: "category", label: "類別" },
+      { key: "price", label: "售價", num: true, format: fmtMoney },
+      { key: "avgCost", label: "平均成本", num: true, format: fmtMoney },
+      { key: "stock", label: "庫存", num: true, format: fmtNumber },
+      { key: "safetyStock", label: "安全庫存", num: true, format: fmtNumber },
+    ],
+    filterKeys: ["code", "name", "category"],
+    renderActions: (td, p) => {
+      td.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "編輯", onclick: () => editProduct(p) }));
+      td.appendChild(el("button", { class: "btn btn-danger btn-sm", text: "刪除", style: "margin-left: 6px;",
+        onclick: () => confirmModal(`確定刪除商品「${p.name}」？`,
+          () => tryDelete("商品", () => API.deleteProduct(p.id))) }));
+    }
+  }));
   root.appendChild(card);
   return root;
 };
@@ -134,7 +173,7 @@ function editProduct(p) {
 /* ------------------------------------------------------------ */
 /* Suppliers / Customers (similar shape) */
 /* ------------------------------------------------------------ */
-function simpleMaster(title, lister, editor, columns) {
+function masterPage(title, lister, editor, deleter, columns, filterKeys) {
   return async () => {
     const rows = await lister();
     const root = el("div");
@@ -147,43 +186,53 @@ function simpleMaster(title, lister, editor, columns) {
       el("button", { class: "btn btn-primary", text: "+ 新增", onclick: () => editor(null) })
     ]));
 
-    const table = el("table", { class: "data" });
-    table.innerHTML = `<thead><tr>${columns.map(c => `<th class="${c.num ? 'num' : ''}">${c.label}</th>`).join("")}<th></th></tr></thead>`;
-    const tbody = el("tbody");
-    rows.forEach(r => {
-      const tr = el("tr");
-      tr.innerHTML = columns.map(c => `<td class="${c.num ? 'num' : ''}">${c.format ? c.format(r[c.key]) : (r[c.key] ?? "")}</td>`).join("") + "<td></td>";
-      tr.lastElementChild.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "編輯", onclick: () => editor(r) }));
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    card.appendChild(table);
+    card.appendChild(searchableTable({
+      rows, columns, filterKeys,
+      renderActions: (td, r) => {
+        td.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "編輯", onclick: () => editor(r) }));
+        td.appendChild(el("button", { class: "btn btn-danger btn-sm", text: "刪除", style: "margin-left: 6px;",
+          onclick: () => confirmModal(`確定刪除${title}「${r.name}」？`,
+            () => tryDelete(title, () => deleter(r.id))) }));
+      }
+    }));
     root.appendChild(card);
     return root;
   };
 }
 
-Views.suppliers = simpleMaster("供應商", API.listSuppliers, (s) => editParty(s, "供應商", API.createSupplier, API.updateSupplier),
-  [{ key: "code", label: "編號" }, { key: "name", label: "名稱" }, { key: "contact", label: "聯絡人" }, { key: "phone", label: "電話" }, { key: "email", label: "Email" }]);
+Views.suppliers = masterPage("供應商", API.listSuppliers,
+  (s) => editParty(s, "供應商", API.createSupplier, API.updateSupplier), API.deleteSupplier,
+  [{ key: "code", label: "編號" }, { key: "name", label: "名稱" }, { key: "contact", label: "聯絡人" }, { key: "phone", label: "電話" }, { key: "email", label: "Email" }],
+  ["code", "name", "contact", "phone", "email"]);
 
-Views.customers = simpleMaster("客戶", API.listCustomers, (c) => editParty(c, "客戶", API.createCustomer, API.updateCustomer, true),
+Views.customers = masterPage("客戶", API.listCustomers,
+  (c) => editParty(c, "客戶", API.createCustomer, API.updateCustomer, true), API.deleteCustomer,
   [{ key: "code", label: "編號" }, { key: "name", label: "名稱" }, { key: "contact", label: "聯絡人" }, { key: "phone", label: "電話" },
-   { key: "creditLimit", label: "信用額度", num: true, format: fmtMoney }]);
+   { key: "creditLimit", label: "信用額度", num: true, format: fmtMoney }],
+  ["code", "name", "contact", "phone"]);
 
-Views.warehouses = async () => {
-  const rows = await API.listWarehouses();
-  const root = el("div");
-  root.appendChild(el("h1", { class: "page-h", text: "倉庫" }));
-  const card = el("div", { class: "card" });
-  const table = el("table", { class: "data" });
-  table.innerHTML = `<thead><tr><th>編號</th><th>名稱</th><th>位置</th></tr></thead>`;
-  const tbody = el("tbody");
-  rows.forEach(w => tbody.appendChild(el("tr", { html: `<td>${w.code}</td><td>${w.name}</td><td>${w.location}</td>` })));
-  table.appendChild(tbody);
-  card.appendChild(table);
-  root.appendChild(card);
-  return root;
-};
+Views.warehouses = masterPage("倉庫", API.listWarehouses, editWarehouse, API.deleteWarehouse,
+  [{ key: "code", label: "編號" }, { key: "name", label: "名稱" }, { key: "location", label: "位置" }],
+  ["code", "name", "location"]);
+
+function editWarehouse(record) {
+  const isNew = !record;
+  openModal(isNew ? "新增倉庫" : "編輯倉庫", (body) => {
+    const code = input({ value: record?.code || "" });
+    const name = input({ value: record?.name || "" });
+    const loc  = input({ value: record?.location || "" });
+    body.appendChild(el("div", { class: "form" }, [
+      field("編號", code), field("名稱", name), field("位置", loc),
+    ]));
+    return async () => {
+      const payload = { id: record?.id || 0, code: code.value, name: name.value, location: loc.value };
+      if (isNew) await API.createWarehouse(payload);
+      else await API.updateWarehouse(record.id, payload);
+      toast("已儲存", "ok");
+      router.refresh();
+    };
+  });
+}
 
 function editParty(record, label, createFn, updateFn, withCredit = false) {
   const isNew = !record;
@@ -221,7 +270,7 @@ Views.purchases = async () => {
   const rows = await API.listPurchases();
   const root = el("div");
   root.appendChild(el("h1", { class: "page-h", text: "進貨作業" }));
-  root.appendChild(el("p", { class: "page-sub", text: "每筆進貨會自動刷新加權平均成本，並產生借貸分錄。" }));
+  root.appendChild(el("p", { class: "page-sub", text: "每筆進貨會自動刷新加權平均成本，並產生借貸分錄。點單號可查看明細。" }));
 
   const card = el("div", { class: "card" });
   card.appendChild(el("div", { class: "card-h" }, [
@@ -229,35 +278,62 @@ Views.purchases = async () => {
     el("button", { class: "btn btn-primary", text: "+ 新增進貨", onclick: () => newPurchase() })
   ]));
 
-  const table = el("table", { class: "data" });
-  table.innerHTML = `<thead><tr>
-    <th>單號</th><th>日期</th><th>供應商</th><th>倉庫</th>
-    <th class="num">金額</th><th>付款</th><th>狀態</th><th></th>
-  </tr></thead>`;
-  const tbody = el("tbody");
-  rows.forEach(p => {
-    const tr = el("tr");
-    tr.innerHTML = `
-      <td>${p.number}</td>
-      <td>${fmtDate(p.date)}</td>
-      <td>${p.supplierName}</td>
-      <td>${p.warehouseName}</td>
-      <td class="num">${fmtMoney(p.totalAmount)}</td>
-      <td>${p.isCash ? "現金" : "賒帳"}</td>
-      <td></td><td></td>`;
-    tr.children[6].appendChild(pill(p.status === "Active" ? "有效" : "已作廢", p.status === "Active" ? "ok" : "bad"));
-    const actions = tr.children[7];
-    if (p.status === "Active") {
-      actions.appendChild(el("button", { class: "btn btn-danger btn-sm", text: "作廢",
-        onclick: () => confirmModal(`確定作廢 ${p.number}？`, async () => { await API.cancelPurchase(p.id); toast("已作廢", "ok"); router.refresh(); }) }));
+  card.appendChild(searchableTable({
+    rows,
+    columns: [
+      { key: "number", label: "單號", format: (v, r) => `<a href="javascript:void(0)" onclick='viewPurchase(${r.id})' style="color:#6772ff;font-weight:600;">${v}</a>` },
+      { key: "date", label: "日期", format: fmtDate },
+      { key: "supplierName", label: "供應商" },
+      { key: "warehouseName", label: "倉庫" },
+      { key: "totalAmount", label: "金額", num: true, format: fmtMoney },
+      { key: "isCash", label: "付款", format: v => v ? "現金" : "賒帳" },
+      { key: "status", label: "狀態", format: v => `<span class="pill pill-${v === 'Active' ? 'ok' : 'bad'}">${v === 'Active' ? '有效' : '已作廢'}</span>` },
+    ],
+    filterKeys: ["number", "supplierName", "warehouseName"],
+    renderActions: (td, p) => {
+      td.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "明細", onclick: () => viewPurchase(p.id) }));
+      if (p.status === "Active") {
+        td.appendChild(el("button", { class: "btn btn-danger btn-sm", text: "作廢", style: "margin-left: 6px;",
+          onclick: () => confirmModal(`確定作廢 ${p.number}？`,
+            async () => { await API.cancelPurchase(p.id); toast("已作廢", "ok"); router.refresh(); }) }));
+      }
     }
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  card.appendChild(table);
+  }));
   root.appendChild(card);
   return root;
 };
+
+async function viewPurchase(id) {
+  const p = await API.getPurchase(id);
+  openModal(`進貨單 ${p.number}`, (body) => {
+    body.appendChild(buildDocHeader([
+      ["日期", fmtDate(p.date)], ["供應商", p.supplierName],
+      ["倉庫", p.warehouseName], ["付款方式", p.isCash ? "現金" : "賒帳"],
+      ["狀態", p.status === "Active" ? "有效" : "已作廢"], ["備註", p.note || "—"],
+    ]));
+    const t = el("table", { class: "data", style: "margin-top: 14px;" });
+    t.innerHTML = `<thead><tr><th>商品</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr></thead>`;
+    const tb = el("tbody");
+    p.items.forEach(i => tb.appendChild(el("tr", { html: `<td>${i.productCode} ${i.productName}</td>
+      <td class="num">${fmtNumber(i.qty)}</td>
+      <td class="num">${fmtMoney(i.unitCost)}</td>
+      <td class="num">${fmtMoney(i.qty * i.unitCost)}</td>` })));
+    tb.appendChild(el("tr", { html: `<td colspan="3" style="text-align:right;font-weight:600;">合計</td>
+      <td class="num" style="font-weight:700;">${fmtMoney(p.totalAmount)}</td>` }));
+    t.appendChild(tb);
+    body.appendChild(t);
+  });
+}
+window.viewPurchase = viewPurchase;
+
+function buildDocHeader(rows) {
+  const wrap = el("div", { style: "display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px 24px; padding: 12px 0;" });
+  rows.forEach(([k, v]) => wrap.appendChild(el("div", {}, [
+    el("div", { style: "font-size:11px;color:#9aa0c1;text-transform:uppercase;letter-spacing:.5px;", text: k }),
+    el("div", { style: "font-size:14px;font-weight:600;color:#1d2235;margin-top:2px;", text: v }),
+  ])));
+  return wrap;
+}
 
 async function newPurchase() {
   const [products, suppliers, warehouses] = await Promise.all([
@@ -317,9 +393,10 @@ async function newPurchase() {
 /* ------------------------------------------------------------ */
 Views.sales = async () => {
   const rows = await API.listSales();
+  rows.forEach(s => s.profit = s.totalAmount - s.totalCost);
   const root = el("div");
   root.appendChild(el("h1", { class: "page-h", text: "銷售作業" }));
-  root.appendChild(el("p", { class: "page-sub", text: "銷售時自動以當下加權平均成本鎖定銷貨成本。" }));
+  root.appendChild(el("p", { class: "page-sub", text: "銷售時自動以當下加權平均成本鎖定銷貨成本。點單號可查看明細。" }));
 
   const card = el("div", { class: "card" });
   card.appendChild(el("div", { class: "card-h" }, [
@@ -327,37 +404,56 @@ Views.sales = async () => {
     el("button", { class: "btn btn-primary", text: "+ 新增銷售", onclick: () => newSale() })
   ]));
 
-  const table = el("table", { class: "data" });
-  table.innerHTML = `<thead><tr>
-    <th>單號</th><th>日期</th><th>客戶</th>
-    <th class="num">收入</th><th class="num">成本</th><th class="num">毛利</th>
-    <th>付款</th><th>狀態</th><th></th>
-  </tr></thead>`;
-  const tbody = el("tbody");
-  rows.forEach(s => {
-    const profit = s.totalAmount - s.totalCost;
-    const tr = el("tr");
-    tr.innerHTML = `
-      <td>${s.number}</td>
-      <td>${fmtDate(s.date)}</td>
-      <td>${s.customerName}</td>
-      <td class="num">${fmtMoney(s.totalAmount)}</td>
-      <td class="num">${fmtMoney(s.totalCost)}</td>
-      <td class="num">${fmtMoney(profit)}</td>
-      <td>${s.isCash ? "現金" : "賒帳"}</td>
-      <td></td><td></td>`;
-    tr.children[7].appendChild(pill(s.status === "Active" ? "有效" : "已作廢", s.status === "Active" ? "ok" : "bad"));
-    if (s.status === "Active") {
-      tr.children[8].appendChild(el("button", { class: "btn btn-danger btn-sm", text: "作廢",
-        onclick: () => confirmModal(`確定作廢 ${s.number}？`, async () => { await API.cancelSale(s.id); toast("已作廢", "ok"); router.refresh(); }) }));
+  card.appendChild(searchableTable({
+    rows,
+    columns: [
+      { key: "number", label: "單號", format: (v, r) => `<a href="javascript:void(0)" onclick='viewSale(${r.id})' style="color:#6772ff;font-weight:600;">${v}</a>` },
+      { key: "date", label: "日期", format: fmtDate },
+      { key: "customerName", label: "客戶" },
+      { key: "totalAmount", label: "收入", num: true, format: fmtMoney },
+      { key: "totalCost", label: "成本", num: true, format: fmtMoney },
+      { key: "profit", label: "毛利", num: true, format: fmtMoney },
+      { key: "isCash", label: "付款", format: v => v ? "現金" : "賒帳" },
+      { key: "status", label: "狀態", format: v => `<span class="pill pill-${v === 'Active' ? 'ok' : 'bad'}">${v === 'Active' ? '有效' : '已作廢'}</span>` },
+    ],
+    filterKeys: ["number", "customerName"],
+    renderActions: (td, s) => {
+      td.appendChild(el("button", { class: "btn btn-ghost btn-sm", text: "明細", onclick: () => viewSale(s.id) }));
+      if (s.status === "Active") {
+        td.appendChild(el("button", { class: "btn btn-danger btn-sm", text: "作廢", style: "margin-left: 6px;",
+          onclick: () => confirmModal(`確定作廢 ${s.number}？`,
+            async () => { await API.cancelSale(s.id); toast("已作廢", "ok"); router.refresh(); }) }));
+      }
     }
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  card.appendChild(table);
+  }));
   root.appendChild(card);
   return root;
 };
+
+async function viewSale(id) {
+  const s = await API.getSale(id);
+  openModal(`銷貨單 ${s.number}`, (body) => {
+    body.appendChild(buildDocHeader([
+      ["日期", fmtDate(s.date)], ["客戶", s.customerName],
+      ["倉庫", s.warehouseName], ["付款方式", s.isCash ? "現金" : "賒帳"],
+      ["狀態", s.status === "Active" ? "有效" : "已作廢"], ["備註", s.note || "—"],
+    ]));
+    const t = el("table", { class: "data", style: "margin-top: 14px;" });
+    t.innerHTML = `<thead><tr><th>商品</th><th class="num">數量</th>
+      <th class="num">售價</th><th class="num">成本</th><th class="num">小計</th></tr></thead>`;
+    const tb = el("tbody");
+    s.items.forEach(i => tb.appendChild(el("tr", { html: `<td>${i.productCode} ${i.productName}</td>
+      <td class="num">${fmtNumber(i.qty)}</td>
+      <td class="num">${fmtMoney(i.unitPrice)}</td>
+      <td class="num">${fmtMoney(i.unitCost)}</td>
+      <td class="num">${fmtMoney(i.qty * i.unitPrice)}</td>` })));
+    tb.appendChild(el("tr", { html: `<td colspan="4" style="text-align:right;font-weight:600;">合計（收入 / 成本 / 毛利）</td>
+      <td class="num" style="font-weight:700;">${fmtMoney(s.totalAmount)} / ${fmtMoney(s.totalCost)} / ${fmtMoney(s.totalAmount - s.totalCost)}</td>` }));
+    t.appendChild(tb);
+    body.appendChild(t);
+  });
+}
+window.viewSale = viewSale;
 
 async function newSale() {
   const [products, customers, warehouses] = await Promise.all([
@@ -499,22 +595,22 @@ Views.inventory = async () => {
     el("h3", { text: "庫存查詢" }),
     el("button", { class: "btn btn-primary", text: "盤點調整", onclick: () => adjustStock(products) })
   ]));
-  const tb1 = el("table", { class: "data" });
-  tb1.innerHTML = `<thead><tr><th>編號</th><th>商品</th><th>類別</th>
-    <th class="num">庫存</th><th class="num">平均成本</th><th class="num">存貨價值</th><th>狀態</th></tr></thead>`;
-  const body1 = el("tbody");
-  products.forEach(p => {
-    const tr = el("tr");
-    tr.innerHTML = `<td>${p.code}</td><td>${p.name}</td><td>${p.category}</td>
-      <td class="num">${fmtNumber(p.stock)}</td>
-      <td class="num">${fmtMoney(p.avgCost)}</td>
-      <td class="num">${fmtMoney(p.stock * p.avgCost)}</td><td></td>`;
-    tr.lastElementChild.appendChild(p.stock < p.safetyStock
-      ? pill("低於安全庫存", "warn") : pill("正常", "ok"));
-    body1.appendChild(tr);
-  });
-  tb1.appendChild(body1);
-  card.appendChild(tb1);
+  products.forEach(p => { p.stockValue = p.stock * p.avgCost; });
+  card.appendChild(searchableTable({
+    rows: products,
+    columns: [
+      { key: "code", label: "編號" },
+      { key: "name", label: "商品" },
+      { key: "category", label: "類別" },
+      { key: "stock", label: "庫存", num: true, format: fmtNumber },
+      { key: "avgCost", label: "平均成本", num: true, format: fmtMoney },
+      { key: "stockValue", label: "存貨價值", num: true, format: fmtMoney },
+      { key: "stock", label: "狀態", format: (_, p) => p.stock < p.safetyStock
+          ? `<span class="pill pill-warn">低於安全庫存</span>`
+          : `<span class="pill pill-ok">正常</span>` },
+    ],
+    filterKeys: ["code", "name", "category"],
+  }));
   root.appendChild(card);
 
   const card2 = el("div", { class: "card" });

@@ -33,6 +33,23 @@ public class PurchasesController : ControllerBase
         });
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var p = await _db.Purchases
+            .Include(x => x.Supplier).Include(x => x.Warehouse)
+            .Include(x => x.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(x => x.Id == id);
+        if (p == null) return NotFound();
+        return Ok(new
+        {
+            p.Id, p.Number, p.Date, p.SupplierId, supplierName = p.Supplier?.Name,
+            p.WarehouseId, warehouseName = p.Warehouse?.Name,
+            p.TotalAmount, p.IsCash, status = p.Status.ToString(), p.Note,
+            items = p.Items.Select(i => new { i.Id, i.ProductId, productCode = i.Product?.Code, productName = i.Product?.Name, i.Qty, i.UnitCost })
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePurchaseDto dto)
     {
@@ -84,6 +101,23 @@ public class SalesController : ControllerBase
             s.WarehouseId, warehouseName = s.Warehouse?.Name,
             s.TotalAmount, s.TotalCost, s.IsCash, status = s.Status.ToString(), s.Note,
             items = s.Items.Select(i => new { i.Id, i.ProductId, productName = i.Product?.Name, i.Qty, i.UnitPrice, i.UnitCost })
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var s = await _db.Sales
+            .Include(x => x.Customer).Include(x => x.Warehouse)
+            .Include(x => x.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(x => x.Id == id);
+        if (s == null) return NotFound();
+        return Ok(new
+        {
+            s.Id, s.Number, s.Date, s.CustomerId, customerName = s.Customer?.Name,
+            s.WarehouseId, warehouseName = s.Warehouse?.Name,
+            s.TotalAmount, s.TotalCost, s.IsCash, status = s.Status.ToString(), s.Note,
+            items = s.Items.Select(i => new { i.Id, i.ProductId, productCode = i.Product?.Code, productName = i.Product?.Name, i.Qty, i.UnitPrice, i.UnitCost })
         });
     }
 

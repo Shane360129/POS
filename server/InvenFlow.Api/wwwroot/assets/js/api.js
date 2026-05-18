@@ -40,14 +40,20 @@ const API = (() => {
     deleteCustomer: (id) => http("DELETE", `/api/customers/${id}`),
 
     listWarehouses: () => http("GET",  "/api/warehouses"),
+    createWarehouse:(p) => http("POST", "/api/warehouses", p),
+    updateWarehouse:(id, p) => http("PUT", `/api/warehouses/${id}`, p),
+    deleteWarehouse:(id) => http("DELETE", `/api/warehouses/${id}`),
+
     listAccounts:   () => http("GET",  "/api/accounts"),
 
     // transactions
     listPurchases:  () => http("GET",  "/api/purchases"),
+    getPurchase:    (id) => http("GET", `/api/purchases/${id}`),
     createPurchase: (p) => http("POST", "/api/purchases", p),
     cancelPurchase: (id) => http("POST", `/api/purchases/${id}/cancel`),
 
     listSales:      () => http("GET",  "/api/sales"),
+    getSale:        (id) => http("GET", `/api/sales/${id}`),
     createSale:     (p) => http("POST", "/api/sales", p),
     cancelSale:     (id) => http("POST", `/api/sales/${id}/cancel`),
 

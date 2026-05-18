@@ -27,6 +27,8 @@ public class ProductsController : ControllerBase
     {
         var p = await _db.Products.FindAsync(id); if (p is null) return NotFound();
         if (p.Stock != 0) return BadRequest(new { error = "庫存非零，無法刪除" });
+        if (await _db.StockMovements.AnyAsync(m => m.ProductId == id))
+            return BadRequest(new { error = "商品已有異動紀錄，無法刪除" });
         _db.Products.Remove(p); await _db.SaveChangesAsync(); return NoContent();
     }
 }
@@ -51,6 +53,10 @@ public class SuppliersController : ControllerBase
     [HttpDelete("{id}")] public async Task<IActionResult> Delete(int id)
     {
         var s = await _db.Suppliers.FindAsync(id); if (s is null) return NotFound();
+        if (await _db.Purchases.AnyAsync(p => p.SupplierId == id))
+            return BadRequest(new { error = "已有進貨單參照此供應商，無法刪除" });
+        if (await _db.Payments.AnyAsync(p => p.SupplierId == id))
+            return BadRequest(new { error = "已有付款單參照此供應商，無法刪除" });
         _db.Suppliers.Remove(s); await _db.SaveChangesAsync(); return NoContent();
     }
 }
@@ -75,6 +81,10 @@ public class CustomersController : ControllerBase
     [HttpDelete("{id}")] public async Task<IActionResult> Delete(int id)
     {
         var c = await _db.Customers.FindAsync(id); if (c is null) return NotFound();
+        if (await _db.Sales.AnyAsync(s => s.CustomerId == id))
+            return BadRequest(new { error = "已有銷貨單參照此客戶，無法刪除" });
+        if (await _db.Receipts.AnyAsync(r => r.CustomerId == id))
+            return BadRequest(new { error = "已有收款單參照此客戶，無法刪除" });
         _db.Customers.Remove(c); await _db.SaveChangesAsync(); return NoContent();
     }
 }
@@ -86,7 +96,26 @@ public class WarehousesController : ControllerBase
     readonly AppDbContext _db;
     public WarehousesController(AppDbContext db) { _db = db; }
     [HttpGet] public async Task<IEnumerable<Warehouse>> List() => await _db.Warehouses.OrderBy(w => w.Code).ToListAsync();
-    [HttpPost] public async Task<ActionResult<Warehouse>> Create(Warehouse w) { _db.Warehouses.Add(w); await _db.SaveChangesAsync(); return Ok(w); }
+    [HttpGet("{id}")] public async Task<ActionResult<Warehouse>> Get(int id) => await _db.Warehouses.FindAsync(id) is { } w ? w : NotFound();
+    [HttpPost] public async Task<ActionResult<Warehouse>> Create(Warehouse w) { _db.Warehouses.Add(w); await _db.SaveChangesAsync(); return CreatedAtAction(nameof(Get), new { id = w.Id }, w); }
+    [HttpPut("{id}")] public async Task<IActionResult> Update(int id, Warehouse w)
+    {
+        if (id != w.Id) return BadRequest();
+        var existing = await _db.Warehouses.FindAsync(id); if (existing is null) return NotFound();
+        existing.Code = w.Code; existing.Name = w.Name; existing.Location = w.Location;
+        await _db.SaveChangesAsync(); return NoContent();
+    }
+    [HttpDelete("{id}")] public async Task<IActionResult> Delete(int id)
+    {
+        var w = await _db.Warehouses.FindAsync(id); if (w is null) return NotFound();
+        if (await _db.Purchases.AnyAsync(p => p.WarehouseId == id))
+            return BadRequest(new { error = "已有進貨單參照此倉庫，無法刪除" });
+        if (await _db.Sales.AnyAsync(s => s.WarehouseId == id))
+            return BadRequest(new { error = "已有銷貨單參照此倉庫，無法刪除" });
+        if (await _db.StockMovements.AnyAsync(m => m.WarehouseId == id))
+            return BadRequest(new { error = "倉庫已有庫存異動紀錄，無法刪除" });
+        _db.Warehouses.Remove(w); await _db.SaveChangesAsync(); return NoContent();
+    }
 }
 
 [ApiController]
