@@ -24,12 +24,14 @@ jobs:
       - run: npm run build
 
   backend:
-    name: 後端 build（.NET 8，CI 內驗證）
+    name: 後端 build + test（.NET 8，CI 內驗證）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      # 目前驗證既有 server/；待 src/ 模組化單體骨架就緒後改建置 InvenFlow.sln。
-      - run: dotnet build server/InvenFlow.Api/InvenFlow.Api.csproj -c Release
+      # 模組化單體骨架（src/）：以 csproj 參考鏈建置 Host，再跑模組測試。
+      - run: dotnet restore src/Host/Host.csproj
+      - run: dotnet build src/Host/Host.csproj -c Release --no-restore
+      - run: dotnet test tests/Mdm.Tests/Mdm.Tests.csproj -c Release
