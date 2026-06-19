@@ -2,6 +2,10 @@ using InvenFlow.BuildingBlocks.Abstractions;
 using InvenFlow.BuildingBlocks.Modules;
 using InvenFlow.BuildingBlocks.Web;
 using InvenFlow.Modules.Mdm;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +27,37 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 
+// 認證（Keycloak OIDC / JWT Bearer）骨架。Phase 1 起於端點掛 [Authorize]/policy。
+var authority = builder.Configuration["Auth:Authority"];
+var audience = builder.Configuration["Auth:Audience"];
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = authority;
+        options.Audience = audience;
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters.ValidateAudience = !string.IsNullOrWhiteSpace(audience);
+    });
+builder.Services.AddAuthorization();
+
+// 可觀測性（OpenTelemetry：tracing + metrics）。設定 OTLP endpoint 才匯出。
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("InvenFlow.Host"))
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            tracing.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            metrics.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
+    });
+
 const string corsPolicy = "spa";
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
     ?? ["http://localhost:5173"];
@@ -41,6 +76,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(corsPolicy);
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
