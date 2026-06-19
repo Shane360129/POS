@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "claude/**"]
+  pull_request:
+
+jobs:
+  frontend:
+    name: 前端 build + lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  backend:
+    name: 後端 build（.NET 8，CI 內驗證）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      # 目前驗證既有 server/；待 src/ 模組化單體骨架就緒後改建置 InvenFlow.sln。
+      - run: dotnet build server/InvenFlow.Api/InvenFlow.Api.csproj -c Release

@@ -1,0 +1,17 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Node（web/ 另有自己的 .gitignore，這裡再保險一次）
+node_modules/
+dist/
+
+# 環境/編輯器
+.env
+.env.local
+*.local
+.DS_Store
+.idea/
