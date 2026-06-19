@@ -36,3 +36,11 @@ jobs:
       - run: dotnet build src/Host/Host.csproj -c Release --no-restore
       - run: dotnet test tests/BuildingBlocks.Tests/BuildingBlocks.Tests.csproj -c Release
       - run: dotnet test tests/Mdm.Tests/Mdm.Tests.csproj -c Release
+
+  docker:
+    name: Docker 映像建置（Host）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Host image
+        run: docker build -f src/Host/Dockerfile -t invenflow-host:ci .

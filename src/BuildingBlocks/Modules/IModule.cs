@@ -16,4 +16,8 @@ public interface IModule
     IServiceCollection Register(IServiceCollection services, IConfiguration configuration);
 
     IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints);
+
+    /// <summary>啟動時初始化（建立資料庫結構 / 種子）。預設不做事。</summary>
+    Task InitializeAsync(IServiceProvider services, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 }

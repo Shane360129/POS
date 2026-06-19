@@ -18,11 +18,18 @@ public sealed class MdmModule : IModule
 
     public IServiceCollection Register(IServiceCollection services, IConfiguration configuration)
     {
+        var provider = configuration["Database:Provider"] ?? "Sqlite";
         var cs = configuration.GetConnectionString("Mdm") ?? "Data Source=invenflow_mdm.db";
+
         services.AddScoped<AuditSaveChangesInterceptor>();
         services.AddDbContext<MdmDbContext>((sp, opt) =>
-            opt.UseSqlite(cs)
-               .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
+        {
+            if (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+                opt.UseSqlServer(cs, sql => sql.EnableRetryOnFailure());
+            else
+                opt.UseSqlite(cs);
+            opt.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+        });
         services.AddScoped<INumberService, NumberService>();
         services.AddScoped<IOutboxWriter, OutboxWriter<MdmDbContext>>();
         return services;
@@ -37,5 +44,13 @@ public sealed class MdmModule : IModule
             Results.Ok(new { number = await numbers.NextAsync(key, ct) }));
 
         return endpoints;
+    }
+
+    public async Task InitializeAsync(IServiceProvider services, CancellationToken cancellationToken = default)
+    {
+        // 骨架：建立結構（EnsureCreated）。正式環境改用 EF migrations（待本機 SDK 後產生）。
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MdmDbContext>();
+        await db.Database.EnsureCreatedAsync(cancellationToken);
     }
 }

@@ -85,4 +85,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 foreach (var module in modules)
     module.MapEndpoints(app);
 
+// 啟動時建立各模組資料庫結構（骨架：EnsureCreated；正式環境改 EF migrations）。
+foreach (var module in modules)
+    await module.InitializeAsync(app.Services);
+
 app.Run();
