@@ -31,7 +31,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      # 模組化單體骨架（src/）：以 csproj 參考鏈建置 Host，再跑模組測試。
+      # 模組化單體骨架（src/）：以 csproj 參考鏈建置 Host，再跑各模組與共用層測試。
       - run: dotnet restore src/Host/Host.csproj
       - run: dotnet build src/Host/Host.csproj -c Release --no-restore
+      - run: dotnet test tests/BuildingBlocks.Tests/BuildingBlocks.Tests.csproj -c Release
       - run: dotnet test tests/Mdm.Tests/Mdm.Tests.csproj -c Release

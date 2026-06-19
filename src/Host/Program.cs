@@ -1,4 +1,6 @@
+using InvenFlow.BuildingBlocks.Abstractions;
 using InvenFlow.BuildingBlocks.Modules;
+using InvenFlow.BuildingBlocks.Web;
 using InvenFlow.Modules.Mdm;
 using Serilog;
 
@@ -13,9 +15,13 @@ IModule[] modules = [new MdmModule()];
 foreach (var module in modules)
     module.Register(builder.Services, builder.Configuration);
 
+// 目前操作者/租戶來源（Phase 1 iam 會以 JWT/HttpContext 取代 SystemCurrentUser）。
+builder.Services.AddScoped<ICurrentUser, SystemCurrentUser>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 
 const string corsPolicy = "spa";
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()

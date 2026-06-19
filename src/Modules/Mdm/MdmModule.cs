@@ -1,4 +1,6 @@
+using InvenFlow.BuildingBlocks.Auditing;
 using InvenFlow.BuildingBlocks.Modules;
+using InvenFlow.BuildingBlocks.Outbox;
 using InvenFlow.Modules.Mdm.Application;
 using InvenFlow.Modules.Mdm.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -17,8 +19,12 @@ public sealed class MdmModule : IModule
     public IServiceCollection Register(IServiceCollection services, IConfiguration configuration)
     {
         var cs = configuration.GetConnectionString("Mdm") ?? "Data Source=invenflow_mdm.db";
-        services.AddDbContext<MdmDbContext>(opt => opt.UseSqlite(cs));
+        services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddDbContext<MdmDbContext>((sp, opt) =>
+            opt.UseSqlite(cs)
+               .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
         services.AddScoped<INumberService, NumberService>();
+        services.AddScoped<IOutboxWriter, OutboxWriter<MdmDbContext>>();
         return services;
     }
 
